@@ -1,3 +1,10 @@
+{
+	# Always use the trusted Let's Encrypt production CA. Without this, a
+	# failed attempt can leave Caddy retrying the staging CA (untrusted certs).
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+	email contact@softorasystems.com
+}
+
 {$DOMAIN} {
 	encode zstd gzip
 	reverse_proxy leado:8000
