@@ -3,12 +3,16 @@
 # 🚀 1-Click Deployment Script for a Vultr Cloud Compute instance
 # Leado 2.0 × Vultr: Agent Rush Hackathon
 #
-# Usage (on the fresh Ubuntu VM, from the project directory):
+# Usage (on the VM, from the project directory):
 #   chmod +x deploy_vultr.sh
 #   ./deploy_vultr.sh            # re-execs itself with sudo
 #
+# Modes:
+#   DOMAIN set in .env  -> Caddy + automatic HTTPS on https://$DOMAIN/
+#   DOMAIN empty        -> plain HTTP on http://<vm-ip>:80/
+#
 # Optional environment overrides:
-#   APP_PORT=80 ./deploy_vultr.sh
+#   DOMAIN=leado.example.com APP_PORT=8080 ./deploy_vultr.sh
 # ==============================================================================
 set -euo pipefail
 
@@ -16,10 +20,9 @@ set -euo pipefail
 # freshly-installed Docker socket is usable without a re-login.
 if [ "${EUID}" -ne 0 ]; then
   echo "Elevating with sudo..."
-  exec sudo --preserve-env=APP_PORT bash "$0" "$@"
+  exec sudo --preserve-env=APP_PORT,DOMAIN,APP_BIND bash "$0" "$@"
 fi
 
-APP_PORT="${APP_PORT:-80}"
 cd "$(dirname "$0")"
 
 echo "=========================================================="
@@ -73,20 +76,41 @@ sed -i '/^SOFTORASYSTEMS_TOKEN=/d' .env
 printf "SOFTORASYSTEMS_TOKEN='%s'\n" "$TOKEN" >> .env
 chmod 600 .env
 
+# Resolve the public hostname from the environment or .env.
+DOMAIN="${DOMAIN:-$(grep -E '^DOMAIN=' .env 2>/dev/null | head -n1 | cut -d= -f2- | tr -d "'\"")}"
+
 # 5. Persistent SQLite files ---------------------------------------------------
 # Bind-mounting a missing file makes Docker create a *directory* in its place.
 touch leads.db lead_finder.db
 
-# 6. Build + start -------------------------------------------------------------
-echo "Building Leado 2.0 container..."
-docker compose down --remove-orphans || true
-APP_PORT="$APP_PORT" docker compose up -d --build
+# 6. Select deployment mode ----------------------------------------------------
+COMPOSE=(docker compose -f docker-compose.yml)
+if [ -n "$DOMAIN" ]; then
+  if [ ! -f Caddyfile ] || [ ! -f docker-compose.tls.yml ]; then
+    echo "ERROR: DOMAIN is set but Caddyfile/docker-compose.tls.yml is missing." >&2
+    exit 1
+  fi
+  COMPOSE+=(-f docker-compose.tls.yml)
+  APP_BIND=127.0.0.1
+  APP_PORT=8000
+  HEALTH_PORT=8000
+else
+  APP_BIND="${APP_BIND:-0.0.0.0}"
+  APP_PORT="${APP_PORT:-80}"
+  HEALTH_PORT="$APP_PORT"
+fi
+export APP_BIND APP_PORT DOMAIN
 
-# 7. Health check --------------------------------------------------------------
+# 7. Build + start -------------------------------------------------------------
+echo "Building Leado 2.0 container..."
+"${COMPOSE[@]}" down --remove-orphans || true
+"${COMPOSE[@]}" up -d --build
+
+# 8. Health check --------------------------------------------------------------
 echo "Waiting for the app to become healthy..."
 HEALTHY=0
 for _ in $(seq 1 60); do
-  if curl -fsS "http://localhost:${APP_PORT}/" >/dev/null 2>&1; then
+  if curl -fsS "http://localhost:${HEALTH_PORT}/" >/dev/null 2>&1; then
     HEALTHY=1
     break
   fi
@@ -97,15 +121,27 @@ PUBLIC_IP="$(curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null \
   || hostname -I | awk '{print $1}')"
 LOGIN_TOKEN="$(grep -E '^SOFTORASYSTEMS_TOKEN=' .env | head -n1 | cut -d= -f2- | tr -d "'\"")"
 
-if [ "$HEALTHY" -eq 1 ]; then
-  echo "=========================================================="
-  echo "  🎉 DEPLOYMENT SUCCESSFUL ON VULTR!"
-  echo "  App URL:      http://${PUBLIC_IP}:${APP_PORT}/"
-  echo "  Access token: ${LOGIN_TOKEN}"
-  echo "  (Token is stored in .env; keep that file private.)"
-  echo "=========================================================="
-else
-  echo "⚠️  App did not answer on port ${APP_PORT}. Recent logs:"
-  docker compose logs --tail=40
+if [ "$HEALTHY" -ne 1 ]; then
+  echo "⚠️  App did not answer on port ${HEALTH_PORT}. Recent logs:"
+  "${COMPOSE[@]}" logs --tail=40
   exit 1
 fi
+
+if [ -n "$DOMAIN" ]; then
+  URL="https://${DOMAIN}/"
+  RESOLVED="$(getent hosts "$DOMAIN" 2>/dev/null | awk '{print $1}' | head -n1)"
+  if [ "$RESOLVED" != "$PUBLIC_IP" ]; then
+    echo "⚠️  DNS check: ${DOMAIN} resolves to '${RESOLVED:-nothing}', not ${PUBLIC_IP}."
+    echo "    Add an A record: ${DOMAIN} -> ${PUBLIC_IP}."
+    echo "    Caddy will obtain the TLS certificate automatically once DNS is correct."
+  fi
+else
+  URL="http://${PUBLIC_IP}:${APP_PORT}/"
+fi
+
+echo "=========================================================="
+echo "  🎉 DEPLOYMENT SUCCESSFUL ON VULTR!"
+echo "  App URL:      ${URL}"
+echo "  Access token: ${LOGIN_TOKEN}"
+echo "  (Token is stored in .env; keep that file private.)"
+echo "=========================================================="

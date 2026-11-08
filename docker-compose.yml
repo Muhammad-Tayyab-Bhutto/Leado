@@ -7,8 +7,9 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      # Set APP_PORT=80 in production so the app is reachable at http://<vm-ip>/
-      - "${APP_PORT:-8000}:8000"
+      # Bind to localhost by default; the Caddy edge is the public entrypoint.
+      # For a plain-IP deployment set APP_BIND=0.0.0.0 and APP_PORT=80.
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8000}:8000"
     env_file:
       - .env
     environment:

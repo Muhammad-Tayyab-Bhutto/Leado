@@ -1,0 +1,28 @@
+# TLS edge for production. Use together with the base compose file:
+#   DOMAIN=leado.example.com docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+#
+# Caddy terminates TLS, obtains/renews a Let's Encrypt certificate, and proxies
+# to the app over the internal Docker network. The app itself is bound to
+# 127.0.0.1 by the base compose file, so only Caddy is publicly reachable.
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: leado-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env (e.g. leado.example.com)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      leado:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
