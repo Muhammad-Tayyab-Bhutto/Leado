@@ -1,0 +1,68 @@
+name: Deploy to Vultr
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vultr
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy over SSH
+    runs-on: ubuntu-latest
+    # Enable automatic deploys by setting the repository variable
+    # DEPLOY_ENABLED=true (Settings → Secrets and variables → Actions → Variables).
+    # Manual runs via "Run workflow" always proceed.
+    if: vars.DEPLOY_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.VULTR_SSH_KEY }}
+          VULTR_HOST: ${{ secrets.VULTR_HOST }}
+          VULTR_PORT: ${{ secrets.VULTR_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$VULTR_PORT" -H "$VULTR_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync project to the server
+        env:
+          VULTR_HOST: ${{ secrets.VULTR_HOST }}
+          VULTR_USER: ${{ secrets.VULTR_USER }}
+          VULTR_PORT: ${{ secrets.VULTR_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude .git \
+            --exclude .env \
+            --exclude '*.db' \
+            --exclude '*.db-*' \
+            --exclude '__pycache__' \
+            --exclude 'graphify-out' \
+            -e "ssh -p $VULTR_PORT" \
+            ./ "$VULTR_USER@$VULTR_HOST:/opt/leado/"
+
+      - name: Build and restart on the server
+        env:
+          VULTR_HOST: ${{ secrets.VULTR_HOST }}
+          VULTR_USER: ${{ secrets.VULTR_USER }}
+          VULTR_PORT: ${{ secrets.VULTR_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          ssh -p "$VULTR_PORT" "$VULTR_USER@$VULTR_HOST" \
+            'cd /opt/leado && chmod +x deploy_vultr.sh && APP_PORT=80 ./deploy_vultr.sh'

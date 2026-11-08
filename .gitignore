@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local state / databases (seeded locally, never committed)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Runtime artifacts
+srv.pid
+iso.err
+iso.dom
+crm.log
+graphify-out/
+
+# OS / editor
+.DS_Store
+node_modules/
+.idea/
+.vscode/

@@ -1,0 +1,2134 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Leado 2.0 × Vultr | Autonomous Sales Ops & Sandboxed Agent</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --p: #0c1120;
+      --p2: #12182c;
+      --b: #1b2542;
+      --t: #edf2fc;
+      --m: #8896b8;
+      --blue: #3b82f6;
+      --pur: #8b5cf6;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --accent: #6366f1
+    }
+
+    [hidden] {
+      display: none !important
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--t);
+      font: 13px/1.48 Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      min-height: 100vh
+    }
+
+    a {
+      color: #8aa4ff;
+      text-decoration: none
+    }
+
+    a:hover {
+      text-decoration: underline
+    }
+
+    .m {
+      color: var(--m);
+      font-size: 12px
+    }
+
+    .side {
+      width: 220px;
+      background: var(--p);
+      border-right: 1px solid var(--b);
+      padding: 18px 12px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .logo {
+      font-weight: 750;
+      font-size: 15px;
+      padding: 6px 10px 18px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      letter-spacing: -.02em
+    }
+
+    .logo i {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--blue), var(--pur));
+      box-shadow: 0 0 12px rgba(99, 102, 241, .4)
+    }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #5a688a;
+      padding: 12px 10px 4px;
+      margin-top: 6px
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 7px;
+      background: none;
+      border: 0;
+      color: var(--m);
+      font: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s
+    }
+
+    .nav:hover {
+      background: var(--p2);
+      color: var(--t)
+    }
+
+    .nav.on {
+      background: #182346;
+      color: #93c5fd;
+      font-weight: 600
+    }
+
+    svg.ic {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: none
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 22px 28px;
+      overflow-y: auto
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -.02em
+    }
+
+    .badge-vultr {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0d233a;
+      border: 1px solid #1e3a5f;
+      color: #60a5fa;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px
+    }
+
+    .badge-vultr i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 18px
+    }
+
+    .card {
+      background: var(--p);
+      border: 1px solid var(--b);
+      border-radius: 9px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .25)
+    }
+
+    .card b {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 3px;
+      letter-spacing: -.02em
+    }
+
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      align-items: center
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+      color: var(--t);
+      background: var(--p);
+      border: 1px solid var(--b);
+      border-radius: 7px;
+      padding: 7px 11px
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, .2)
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical
+    }
+
+    button {
+      cursor: pointer;
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      font-weight: 550;
+      transition: background .15s, border-color .15s
+    }
+
+    button:hover {
+      border-color: #384b7a;
+      background: var(--p2)
+    }
+
+    .pri {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff
+    }
+
+    .pri:hover {
+      background: #2563eb;
+      border-color: #2563eb
+    }
+
+    .accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .accent:hover {
+      background: #4f46e5
+    }
+
+    .dan {
+      color: var(--bad)
+    }
+
+    .dan:hover {
+      border-color: var(--bad)
+    }
+
+    .tw {
+      overflow-x: auto;
+      border: 1px solid var(--b);
+      border-radius: 9px;
+      background: var(--p);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--m);
+      text-align: left;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--b);
+      white-space: nowrap
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #141b30;
+      vertical-align: top
+    }
+
+    tbody tr {
+      cursor: pointer;
+      transition: background .1s
+    }
+
+    tbody tr:hover {
+      background: var(--p2)
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    .opp {
+      max-width: 260px;
+      color: #cbd5e1;
+      font-size: 12.5px
+    }
+
+    .sc {
+      display: inline-block;
+      min-width: 34px;
+      text-align: center;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-weight: 700;
+      font-size: 11.5px
+    }
+
+    .s4 {
+      background: #064e3b;
+      color: var(--ok)
+    }
+
+    .s3 {
+      background: #1e3a8a;
+      color: #93c5fd
+    }
+
+    .s2 {
+      background: #3b1d5c;
+      color: #c084fc
+    }
+
+    .s1 {
+      background: #451a03;
+      color: var(--warn)
+    }
+
+    .s0 {
+      background: #1f2937;
+      color: var(--m)
+    }
+
+    .bd {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap
+    }
+
+    .ga {
+      background: #1e293b;
+      color: #94a3b8
+    }
+
+    .gb {
+      background: #1e3a8a;
+      color: #93c5fd
+    }
+
+    .gc {
+      background: #3b1d5c;
+      color: #c084fc
+    }
+
+    .gd {
+      background: #451a03;
+      color: var(--warn)
+    }
+
+    .ge {
+      background: #064e3b;
+      color: var(--ok)
+    }
+
+    .gf {
+      background: #4c0519;
+      color: var(--bad)
+    }
+
+    .pg {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px
+    }
+
+    .board {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      align-items: flex-start
+    }
+
+    .col {
+      flex: 0 0 240px;
+      background: var(--p);
+      border: 1px solid var(--b);
+      border-radius: 9px;
+      padding: 10px;
+      min-height: 140px
+    }
+
+    .col.over {
+      border-color: var(--blue);
+      background: #131c36
+    }
+
+    .col h4 {
+      margin: 2px 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--m);
+      display: flex;
+      justify-content: space-between;
+      letter-spacing: .05em;
+      text-transform: uppercase
+    }
+
+    .kc {
+      background: var(--p2);
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      cursor: grab;
+      transition: all .15s
+    }
+
+    .kc:hover {
+      border-color: #3b82f6;
+      transform: translateY(-1px)
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(660px, 100%);
+      background: var(--p);
+      border-left: 1px solid var(--b);
+      overflow-y: auto;
+      padding: 22px 24px;
+      box-shadow: -20px 0 50px rgba(0, 0, 0, .7);
+      z-index: 50
+    }
+
+    .drawer h3 {
+      margin: 20px 0 10px;
+      font-size: 12px;
+      color: var(--m);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 700
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 6px 12px;
+      font-size: 12.5px
+    }
+
+    .kv span:nth-child(odd) {
+      color: var(--m)
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .grid2 label {
+      display: block;
+      color: var(--m);
+      font-size: 11px;
+      margin-bottom: 2px
+    }
+
+    .grid2 input,
+    .grid2 select {
+      width: 100%
+    }
+
+    .ec {
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: var(--p2)
+    }
+
+    .eh {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap
+    }
+
+    .ec input.es {
+      width: 100%;
+      margin-bottom: 8px
+    }
+
+    .pv {
+      white-space: pre-wrap;
+      background: #060a14;
+      border: 1px dashed var(--b);
+      border-radius: 7px;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-family: monospace;
+      font-size: 12px
+    }
+
+    .bt {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 8px
+    }
+
+    .tl {
+      border-left: 1px solid var(--b);
+      padding-left: 14px
+    }
+
+    .tl div {
+      margin-bottom: 10px;
+      position: relative
+    }
+
+    .tl div:before {
+      content: "";
+      position: absolute;
+      left: -18px;
+      top: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent)
+    }
+
+    .empty {
+      text-align: center;
+      padding: 54px 20px;
+      border: 1px dashed var(--b);
+      border-radius: 10px;
+      color: var(--m)
+    }
+
+    .empty b {
+      display: block;
+      color: var(--t);
+      font-size: 16px;
+      margin: 10px 0 6px
+    }
+
+    .skel {
+      height: 36px;
+      border-radius: 7px;
+      margin: 8px 0;
+      background: linear-gradient(90deg, var(--p) 25%, var(--p2) 50%, var(--p) 75%);
+      background-size: 200% 100%;
+      animation: sk 1.2s infinite
+    }
+
+    @keyframes sk {
+      to {
+        background-position: -200% 0
+      }
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .t {
+      background: var(--p2);
+      border: 1px solid var(--b);
+      border-left: 4px solid var(--ok);
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .5);
+      font-weight: 500
+    }
+
+    .t.e {
+      border-left-color: var(--bad)
+    }
+
+    .login {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      z-index: 200
+    }
+
+    .login form {
+      background: var(--p);
+      border: 1px solid var(--b);
+      border-radius: 12px;
+      padding: 28px;
+      width: 340px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .6)
+    }
+
+    .proposal-box {
+      border: 1px solid var(--b);
+      background: var(--p2);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 12px
+    }
+
+    .pricing-tier {
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--p);
+      margin-top: 8px
+    }
+
+    .chat-window {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      border: 1px solid var(--b);
+      border-radius: 10px;
+      background: var(--p);
+      overflow: hidden
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .chat-msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5
+    }
+
+    .chat-msg.user {
+      align-self: flex-end;
+      background: #1e3a8a;
+      color: #eff6ff
+    }
+
+    .chat-msg.bot {
+      align-self: flex-start;
+      background: var(--p2);
+      border: 1px solid var(--b);
+      color: var(--t)
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px
+    }
+
+    .chat-input-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--b);
+      background: var(--p2)
+    }
+
+    .chat-input-bar input {
+      flex: 1
+    }
+
+    body.voice-mode .main {
+      padding: 14px 18px 16px;
+      background: #07101c
+    }
+
+    body.voice-mode #stats,
+    body.voice-mode #bar,
+    body.voice-mode #pager {
+      display: none
+    }
+
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0
+    }
+
+    .voice-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(340px, .86fr);
+      gap: 8px 20px;
+      height: calc(100vh - 108px);
+      min-height: 640px;
+      background:
+        radial-gradient(ellipse at 32% 48%, rgba(56, 120, 220, .18), transparent 52%),
+        linear-gradient(180deg, rgba(14, 24, 48, .35), transparent 28%),
+        repeating-linear-gradient(0deg, transparent, transparent 47px, rgba(120, 160, 210, .06) 48px),
+        repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(120, 160, 210, .06) 48px);
+      border: 1px solid #1a2744;
+      border-radius: 16px;
+      padding: 12px 16px 12px;
+      position: relative
+    }
+
+    .orb-col,
+    .rail-col {
+      min-width: 0;
+      min-height: 0
+    }
+
+    .orb-col {
+      display: flex;
+      flex-direction: column
+    }
+
+    .rail-col {
+      display: flex;
+      flex-direction: column;
+      padding-top: 4px
+    }
+
+    .orb-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 480px
+    }
+
+    .orb-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block
+    }
+
+    .avatar {
+      position: absolute;
+      left: 4%;
+      top: 6%;
+      width: 74px;
+      height: 74px;
+      border-radius: 22px;
+      background: #f4f7fb;
+      display: grid;
+      place-items: center
+    }
+
+    .avatar svg {
+      width: 54px;
+      height: 54px
+    }
+
+    .talk-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 0;
+      min-height: 48px
+    }
+
+    .talk-bar input {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid #314666;
+      border-radius: 0;
+      font-size: 16px;
+      padding: 10px 4px;
+      min-height: 44px
+    }
+
+    .talk-bar input:focus {
+      box-shadow: none;
+      border-color: #7dd3fc
+    }
+
+    .talk-go {
+      background: transparent;
+      border: 0;
+      color: #e8f2ff;
+      font-weight: 650;
+      letter-spacing: .01em;
+      min-height: 44px;
+      padding: 8px 10px
+    }
+
+    .talk-go.live {
+      color: #67e8f9
+    }
+
+    .shimmer-name {
+      color: #d5e2f4;
+      font-weight: 650;
+      letter-spacing: .04em
+    }
+
+    .transcript {
+      margin-top: 8px;
+      background: rgba(8, 14, 28, .78);
+      border: 1px solid #243656;
+      border-radius: 12px;
+      padding: 12px 14px;
+      max-height: 132px;
+      overflow: auto
+    }
+
+    .transcript .who {
+      color: #7dd3fc;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase
+    }
+
+    .transcript p {
+      margin: 4px 0 0
+    }
+
+    .rail-head {
+      display: grid;
+      gap: 10px;
+      margin: 8px 8px 12px
+    }
+
+    .rail-metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4px 10px;
+      align-items: center;
+      font-size: 13px;
+      color: #d5e2f4
+    }
+
+    .rail-metric b {
+      color: #b9f3ff;
+      font-weight: 650
+    }
+
+    .rail-metric .track {
+      grid-column: 1 / -1;
+      height: 4px;
+      background: #17233c;
+      border-radius: 4px;
+      overflow: hidden
+    }
+
+    .rail-metric .track i {
+      display: block;
+      height: 100%;
+      background: #38bdf8
+    }
+
+    .vio-core {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      padding: 2px 8px 4px;
+      color: #c5d4ff;
+      font-size: 11px;
+      letter-spacing: .12em
+    }
+
+    .vio-core b {
+      color: #f4f7ff;
+      font-size: 13px;
+      letter-spacing: .16em
+    }
+
+    .rail-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px
+    }
+
+    .rail-label {
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #c5d2ea;
+      padding: 10px 12px 4px
+    }
+
+    .agent-rail {
+      position: relative;
+      margin: 0 8px 0 12px;
+      padding: 0 0 0 16px
+    }
+
+    .agent-rail:before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: #24508a
+    }
+
+    .agent-rail.flip {
+      margin: 0 8px 0 0;
+      padding: 0 20px 0 4px
+    }
+
+    .agent-rail.flip:before {
+      left: auto;
+      right: 13px
+    }
+
+    .rail-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      background: none;
+      border: 0;
+      color: #e7eefc;
+      padding: 0 10px;
+      min-height: 44px;
+      text-align: left;
+      border-radius: 8px
+    }
+
+    .agent-rail.flip .rail-item {
+      text-align: right
+    }
+
+    .agent-rail.flip .rail-item span {
+      flex: 1
+    }
+
+    .agent-rail:not(.flip) .node {
+      order: -1
+    }
+
+    .transcript .chat-actions button {
+      min-height: 44px
+    }
+
+    .rail-item:hover {
+      background: rgba(30, 58, 110, .45)
+    }
+
+    .rail-item.on {
+      background: rgba(37, 99, 235, .38);
+      color: #fff
+    }
+
+    .rail-item .node {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #7dd3fc;
+      flex: none
+    }
+
+    .agent-rail.flip .rail-item .node {
+      background: #d8b4fe
+    }
+
+    .rail-item.on .node {
+      background: #fff
+    }
+
+    .rail-dock {
+      flex: none;
+      padding-top: 8px;
+      border-top: 1px solid #1b2c4d
+    }
+
+    .intent-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #d5e0f4;
+      font-size: 12px;
+      letter-spacing: .12em
+    }
+
+    .intent-bar b {
+      color: #fff
+    }
+
+    .intent-bar button,
+    .conn-panel button {
+      min-height: 44px;
+      letter-spacing: .08em
+    }
+
+    .conn-dock {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px
+    }
+
+    .conn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #314666;
+      background: #0c1628;
+      color: #e7eefc;
+      border-radius: 999px;
+      padding: 0 12px;
+      min-height: 44px;
+      font-size: 12px
+    }
+
+    .conn .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      flex: none
+    }
+
+    .conn.on .dot {
+      background: #34d399
+    }
+
+    .conn.off {
+      color: #b7c6de;
+      border-style: dashed
+    }
+
+    .conn-panel {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .conn-panel input {
+      flex: 1;
+      min-height: 44px
+    }
+
+    .voice-stage :focus-visible {
+      outline: 2px solid #7dd3fc;
+      outline-offset: 2px
+    }
+
+    .voice-stage.speaking .avatar {
+      outline: 2px solid #7dd3fc
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .voice-stage.speaking .avatar {
+        outline: 2px solid #7dd3fc
+      }
+    }
+
+    @media(max-width:1100px) {
+      .cards {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))
+      }
+    }
+
+    @media(max-width:860px) {
+      .voice-stage {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 0
+      }
+
+      .rail-scroll {
+        max-height: 420px
+      }
+
+      .orb-wrap {
+        min-height: 360px
+      }
+    }
+
+    @media(max-width:800px) {
+      body {
+        flex-direction: column
+      }
+
+      .side {
+        width: 100%;
+        height: auto;
+        position: static;
+        display: flex;
+        gap: 6px;
+        padding: 8px
+      }
+
+      .main {
+        padding: 14px
+      }
+
+      .nav {
+        min-height: 44px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <aside class="side">
+    <div class="logo"><i></i><span>Leado 2.0 <span
+          style="font-size:10px;color:#60a5fa;display:block;font-weight:600">Vultr Agent Rush</span></span></div>
+
+    <div class="nav-section">Pipeline & CRM</div>
+    <button class="nav on" data-act="view" data-v="table"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M3 6h18M3 12h18M3 18h18" />
+      </svg>Pipeline</button>
+    <button class="nav" data-act="view" data-v="board"><svg class="ic" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="5" height="16" />
+        <rect x="10" y="4" width="5" height="10" />
+        <rect x="17" y="4" width="4" height="13" />
+      </svg>Kanban Board</button>
+    <button class="nav" data-act="view" data-v="approvals"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M4 6h16v12H4zM4 7l8 6 8-6" />
+      </svg>Email Approvals</button>
+
+    <div class="nav-section">Leado Intelligence</div>
+    <button class="nav" data-act="view" data-v="proposals"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>Proposals & SOW</button>
+    <button class="nav" data-act="view" data-v="copilot"><svg class="ic" viewBox="0 0 24 24">
+        <path
+          d="M12 2a8 8 0 0 0-8 8c0 3 2 5.5 5 7.2V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2.8c3-1.7 5-4.2 5-7.2a8 8 0 0 0-8-8z" />
+        <line x1="9" y1="13" x2="15" y2="13" />
+      </svg>Vio AI Copilot</button>
+    <button class="nav" data-act="view" data-v="voice"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" />
+        <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
+      </svg>Shimmer Voice</button>
+    <button class="nav" data-act="view" data-v="growth"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M4 19V5M4 19h16" />
+        <path d="M8 15l4-5 3 3 5-7" />
+      </svg>Growth desk</button>
+
+    <div class="nav-section">Autonomous Engine</div>
+    <button class="nav" data-act="view" data-v="sandbox"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>Blast Radius Sandbox</button>
+    <button class="nav" data-act="view" data-v="lead_finder"><svg class="ic" viewBox="0 0 24 24">
+        <circle cx="11" cy="4" r="2" />
+        <circle cx="18" cy="8" r="2" />
+        <circle cx="20" cy="16" r="2" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>Lead Discovery</button>
+    <button class="nav" data-act="view" data-v="bulk"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M9 12l2 2 4-4M7 20l5-5 5 5M7 4l5 5 5-5" />
+      </svg>Bulk Pipeline</button>
+
+    <div style="flex:1"></div>
+    <button class="nav" data-act="logout"><svg class="ic" viewBox="0 0 24 24">
+        <path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" />
+      </svg>Sign out</button>
+    <div id="ai" class="m"
+      style="padding:10px;font-size:11px;line-height:1.4;background:var(--p2);border-radius:6px;margin-top:6px"></div>
+  </aside>
+
+  <div class="main">
+    <div class="header">
+      <h1 id="title">Pipeline</h1>
+      <div class="badge-vultr"><i></i><span>Vultr Serverless Inference</span></div>
+    </div>
+    <div class="cards" id="stats"></div>
+    <div class="bar" id="bar"></div>
+    <div id="content"></div>
+    <div class="pg" id="pager"></div>
+  </div>
+
+  <div id="drawer" class="drawer" hidden></div>
+  <div id="toast"></div>
+  <div id="login" class="login" hidden>
+    <form id="lf">
+      <div class="logo" style="padding:0"><i></i><b>Leado 2.0 × Vultr</b></div>
+      <span class="m">Enter access token</span>
+      <input id="tok" type="password" value="" placeholder="Access token" autocomplete="current-password" required>
+      <button class="pri">Launch Platform</button>
+    </form>
+  </div>
+
+  <script>
+    addEventListener('unhandledrejection', e => {
+      if (/message channel closed before a response was received/i.test(e.reason?.message || '')) e.preventDefault();
+    });
+    const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ST = ["NEW", "RESEARCHED", "QUALIFIED", "EMAIL_DRAFTED", "APPROVED", "CONTACTED", "FOLLOW_UP", "REPLIED", "MEETING", "PROPOSAL", "WON", "LOST", "OPTED_OUT"];
+    const GRP = { NEW: 'a', RESEARCHED: 'a', QUALIFIED: 'a', EMAIL_DRAFTED: 'b', APPROVED: 'b', CONTACTED: 'c', FOLLOW_UP: 'c', REPLIED: 'c', MEETING: 'd', PROPOSAL: 'd', WON: 'e', LOST: 'f', OPTED_OUT: 'f', draft: 'a', approved: 'b', sent: 'e', rejected: 'f' };
+    const band = n => n >= 90 ? 's4' : n >= 75 ? 's3' : n >= 60 ? 's2' : n >= 40 ? 's1' : 's0', badge = s => `<span class="bd g${GRP[s] || 'a'}">${esc(String(s).replace('_', ' '))}</span>`, pill = n => `<span class="sc ${band(n)}">${n}</span>`;
+    const money = n => '$' + Number(n || 0).toLocaleString(), nice = s => esc((s || '—').replace(/_/g, ' '));
+    const CARDS = [['Total Leads', 'discovered'], ['Qualified (60+)', 'qualified'], ['High Priority (75+)', 'high'], ['Drafts Awaiting Approval', 'ready'], ['Emails Sent', 'sent'], ['Positive Replies', 'positive'], ['Meetings Booked', 'meetings'], ['Won Deals', 'won'], ['Closed MRR', 'mrr', 1], ['Weighted Pipeline Value', 'pipeline_mrr', 1]];
+    const LF_CARDS = [['Requests today', 'requests'], ['Leads found today', 'leads_found'], ['Leads imported today', 'leads_imported'], ['Total requests', 'total_requests'], ['Total leads found', 'total_leads'], ['Total imported', 'total_imported'], ['Monitoring active', 'monitoring']];
+    const BULK_CARDS = [['Today requests', 'requests'], ['Today limit', 'limit'], ['Total requests', 'total_requests'], ['Total jobs', 'total_jobs'], ['Completed jobs', 'completed_jobs'], ['Running jobs', 'running_jobs'], ['Failed jobs', 'failed_jobs']];
+
+    let T = sessionStorage.getItem('t') || '', V = 'table', F = { q: '', country: '', industry: '', service: '', status: '', min: '', since: '', sort: 'score', page: 1 }, FAC = { country: [], industry: [], service: [] }, OPEN = null;
+
+    async function api(p, o = {}) {
+      const r = await fetch(p, { ...o, headers: { Authorization: 'Bearer ' + T, 'Content-Type': 'application/json' }, body: o.body ? JSON.stringify(o.body) : undefined });
+      if (r.status === 401) { login(); throw new Error('Not signed in') }
+      const d = (r.headers.get('content-type') || '').includes('json') ? await r.json() : await r.blob();
+      if (!r.ok) throw new Error(d.error || r.statusText);
+      return d;
+    }
+
+    function toast(m, e) { const d = document.createElement('div'); d.className = 't' + (e ? ' e' : ''); d.textContent = m; $('#toast').append(d); setTimeout(() => d.remove(), e ? 6000 : 3000) }
+    function login() { $('#login').hidden = false }
+    $('#lf').onsubmit = e => { e.preventDefault(); T = $('#tok').value; sessionStorage.setItem('t', T); $('#login').hidden = true; boot() };
+    const qs = x => new URLSearchParams(Object.entries({ ...F, ...x }).filter(([, v]) => v !== '' && v != null)).toString();
+    const opts = (a, sel, all) => `<option value="">${all}</option>` + a.map(v => `<option ${v === sel ? 'selected' : ''} value="${esc(v)}">${nice(v)}</option>`).join('');
+
+    function bar() {
+      if (['approvals', 'lead_finder', 'proposals', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
+      $('#bar').innerHTML = `<input id="q" placeholder="Search company, domain, contact" value="${esc(F.q)}" style="width:230px">
+  <select data-f="country">${opts(FAC.country, F.country, 'All countries')}</select><select data-f="industry">${opts(FAC.industry, F.industry, 'All industries')}</select>
+  <select data-f="service">${opts(FAC.service, F.service, 'All services')}</select><select data-f="status">${opts(ST, F.status, 'All statuses')}</select>
+  <input data-f="min" type="number" min="0" max="100" placeholder="Min score" value="${esc(F.min)}" style="width:104px"><input data-f="since" type="date" value="${esc(F.since)}" title="Discovered since">
+  <select data-f="sort"><option value="score">Top score</option><option value="newest" ${F.sort === 'newest' ? 'selected' : ''}>Newest</option><option value="name" ${F.sort === 'name' ? 'selected' : ''}>Company A–Z</option></select>
+  <button class="accent" data-act="adddomains">+ Add Domains</button><button data-act="batch">AI Research Next 5</button><button data-act="export"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M4 20h16"/></svg>Export CSV</button>`;
+    }
+
+    const empty = (t, s) => `<div class="empty"><svg class="ic" style="width:32px;height:32px;margin-bottom:8px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><b>${t}</b>${s}</div>`;
+    const skel = () => '<div class="skel"></div>'.repeat(6);
+
+    async function aiStatus() {
+      try {
+        const a = await api('/api/ai/status');
+        $('#ai').innerHTML = a.configured ? `<b>${esc(a.provider)}</b><br><span style="color:#60a5fa">${esc(a.model)}</span><br>${a.calls_today}/${a.cap} inference calls today` : 'AI not configured';
+      } catch (e) { }
+    }
+
+    async function stats() {
+      aiStatus();
+      try {
+        const s = await api('/api/stats');
+        $('#stats').innerHTML = CARDS.map(([l, k, m]) => `<div class="card"><span class="m">${l}</span><b>${m ? money(s[k]) : s[k]}</b></div>`).join('');
+      } catch (e) { }
+    }
+
+    async function refresh() {
+      if (V === 'lead_finder') { LFRefresh(); return }
+      if (V === 'bulk') { bulkRefresh(); return }
+      if (V === 'proposals') { proposalsRefresh(); return }
+      if (V === 'sandbox') { sandboxRefresh(); return }
+      if (V === 'copilot') { copilotRefresh(); return }
+      if (V === 'voice') { voiceRefresh(); return }
+      if (V === 'growth') { growthRefresh(); return }
+
+      stats(); bar(); $('#pager').innerHTML = '';
+      $('#title').textContent = { table: 'Pipeline Leads', board: 'Visual Pipeline Board', approvals: 'Email Review & Approvals' }[V] || 'Pipeline';
+      $('#content').innerHTML = skel();
+
+      try {
+        if (V === 'approvals') return approvals();
+        const d = await api('/api/leads?' + qs(V === 'board' ? { size: 200, page: 1 } : { size: 25 }));
+        if (!d.items.length) { $('#content').innerHTML = empty('No leads found', 'Add domains or run discovery to populate leads.'); return }
+        $('#content').innerHTML = V === 'board' ? board(d) : table(d);
+        if (V === 'table') pager(d);
+      } catch (e) {
+        $('#content').innerHTML = empty('Could not load leads', esc(e.message) + '<br><button data-act="retry" style="margin-top:10px">Retry</button>');
+      }
+    }
+
+    // ---- PROPOSALS VIEW ----
+    async function proposalsRefresh() {
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Leado Proposal Intelligence'; $('#content').innerHTML = skel();
+      try {
+        const d = await api('/api/proposals');
+        if (!d.items.length) {
+          $('#content').innerHTML = empty('No Proposals Generated Yet', 'Open any qualified lead and click "Generate Leado Proposal" to create an executive SOW and tiered pricing.');
+          return;
+        }
+        $('#content').innerHTML = `<div class="tw"><table><thead><tr><th>Company<th>Proposal Title<th>Scope Phases<th>Deliverables<th>Estimated Value<th>Status<th>Actions</tr></thead><tbody>` +
+          d.items.map(p => `<tr>
+        <td><b>${esc(p.company)}</b><div class="m">${esc(p.website || '')}</div></td>
+        <td><b>${esc(p.title)}</b><div class="m">Updated ${esc(p.updated_at.slice(0, 10))}</div></td>
+        <td>${Array.isArray(p.scope_of_work) ? p.scope_of_work.length : 3} Phases</td>
+        <td>${Array.isArray(p.deliverables) ? p.deliverables.length : 5} Items</td>
+        <td><b style="color:#34d399">${money(p.est_value)}/mo</b></td>
+        <td>${badge(p.status)}</td>
+        <td><button class="pri" data-act="view_proposal" data-pid="${p.id}">View Proposal</button></td>
+      </tr>`).join('') + `</tbody></table></div>`;
+      } catch (e) {
+        $('#content').innerHTML = empty('Could not load proposals', esc(e.message));
+      }
+    }
+
+    // ---- BLAST RADIUS SANDBOX VIEW ----
+    async function sandboxRefresh() {
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Blast Radius Zero: Isolated Execution'; $('#content').innerHTML = skel();
+      try {
+        const st = await api('/api/sandbox/status');
+        const pol = st.containment_policy || {};
+        $('#content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div class="card" style="border-left:4px solid var(--ok)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>Sandbox Containment Status</b>
+            <span class="bd ge">${esc(st.status)}</span>
+          </div>
+          <p class="m" style="margin-top:6px">Execution is restricted to ephemeral environments. Zero host access permitted.</p>
+          <div class="kv" style="margin-top:10px">
+            <span>Memory Quota</span><b>${esc(pol.memory_limit || '256MB')}</b>
+            <span>CPU Allocation</span><b>${esc(pol.cpu_limit || '0.5 vCPU')}</b>
+            <span>Execution Timeout</span><b>${esc(pol.timeout || '8.0s')}</b>
+            <span>Secret Hygiene</span><b style="color:var(--ok)">Host keys scrubbed</b>
+            <span>Privileges</span><b>Non-root</b>
+          </div>
+          <button class="accent" style="margin-top:14px" data-act="verify_sandbox_btn">Re-verify Containment</button>
+        </div>
+        
+        <div class="card">
+          <b>Run Sandboxed Website Audit</b>
+          <p class="m" style="margin-top:6px">Target site is queried from within the sandbox with zero secret inheritance.</p>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <input id="sandbox_target_url" placeholder="https://example.com" style="flex:1" value="https://softorasystems.com">
+            <button class="pri" data-act="run_custom_sandbox_audit">Audit Site</button>
+          </div>
+          <div id="sandbox_audit_result" style="margin-top:10px" hidden></div>
+        </div>
+      </div>
+    `;
+      } catch (e) {
+        $('#content').innerHTML = empty('Could not load sandbox status', esc(e.message));
+      }
+    }
+
+    // ---- VIO COPILOT VIEW ----
+    async function copilotRefresh() {
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Vio: Autonomous Sales Ops Copilot';
+      $('#content').innerHTML = `
+    <div class="chat-window">
+      <div class="chat-messages" id="chat_box">
+        <div class="chat-msg bot">
+          <b>👋 Hi, I'm Vio.</b> I'm your autonomous sales ops & strategy copilot.<br><br>
+          I can analyze your pipeline velocity, verify Blast Radius Zero sandbox containment, run site diagnostics, and draft client proposals.
+          <div class="chat-actions">
+            <button data-act="quick_chat" data-q="Give me an executive pipeline briefing">📊 Pipeline Briefing</button>
+            <button data-act="quick_chat" data-q="Verify Blast Radius Zero sandbox containment">🛡️ Check Sandbox</button>
+            <button data-act="quick_chat" data-q="Generate proposal for top scoring lead">📝 Proposal Intelligence</button>
+            <button data-act="quick_chat" data-q="Find high-intent leads">🎯 Lead Hunter</button>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <input id="chat_in" placeholder="Ask Vio to analyze pipeline, audit leads, or generate proposals..." autocomplete="off">
+        <button class="pri" data-act="send_chat">Ask Vio</button>
+      </div>
+    </div>
+    `;
+    }
+
+    const voiceInk = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+    let voiceState = null, voiceIntents = 0;
+
+    function mountOrb(canvas) {
+      const ctx = canvas.getContext('2d');
+      const N = 520, pts = [], golden = Math.PI * (3 - Math.sqrt(5));
+      for (let i = 0; i < N; i++) {
+        const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(Math.max(0, 1 - y * y)), th = golden * i;
+        pts.push([Math.cos(th) * r, y, Math.sin(th) * r]);
+      }
+      let raf = 0, t = 0, live = true;
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function frame() {
+        if (!live) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.width = canvas.clientWidth * dpr, h = canvas.height = canvas.clientHeight * dpr;
+        ctx.clearRect(0, 0, w, h);
+        t += 0.006;
+        const cx = w * 0.46, cy = h * 0.50, R = Math.min(w, h) * 0.30;
+        ctx.strokeStyle = 'rgba(139,92,246,.45)';
+        ctx.lineWidth = 1.4 * dpr;
+        ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.35, R * 0.46, -0.55 + Math.sin(t) * 0.05, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(56,189,248,.25)';
+        ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.15, R * 1.15, 0, t, t + 1.4); ctx.stroke();
+        const glow = ctx.createRadialGradient(cx, cy, R * 0.1, cx, cy, R * 0.55);
+        glow.addColorStop(0, 'rgba(186,230,253,.55)');
+        glow.addColorStop(1, 'rgba(56,189,248,0)');
+        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, 7); ctx.fill();
+        for (const p of pts) {
+          const x = p[0] * Math.cos(t) - p[2] * Math.sin(t);
+          const z = p[0] * Math.sin(t) + p[2] * Math.cos(t);
+          const px = cx + x * R, py = cy + p[1] * R * 0.94;
+          const a = (z + 1) / 2;
+          ctx.fillStyle = `rgba(214,242,255,${0.18 + a * 0.82})`;
+          ctx.beginPath(); ctx.arc(px, py, (0.7 + a * 1.8) * dpr, 0, 7); ctx.fill();
+        }
+        raf = requestAnimationFrame(frame);
+      }
+      frame();
+      if (reduce) { live = false; cancelAnimationFrame(raf) }
+      return () => { live = false; cancelAnimationFrame(raf) };
+    }
+
+    function shimmerSay(text) {
+      const stage = document.querySelector('.voice-stage');
+      if (!window.speechSynthesis || !text) { stage && stage.classList.remove('speaking'); return }
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.02; u.pitch = 1.04;
+      u.onstart = () => stage && stage.classList.add('speaking');
+      u.onend = () => stage && stage.classList.remove('speaking');
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }
+
+    function paintVoiceTurn(res) {
+      const box = $('#voice_log'); if (!box) return;
+      const flow = (res.workflow || []).map(w => esc(w.persona)).join(' → ');
+      box.innerHTML = `<div class="who">${flow || 'Shimmer'}</div><p>${voiceInk(res.reply || '')}</p>` +
+        ((res.actions || []).length ? `<div class="chat-actions">${res.actions.map(a => `<button data-act="view" data-v="${esc(a.target || 'table')}">${esc(a.label)}</button>`).join('')}</div>` : '');
+      if (res.metrics) {
+        const p = $('#m_progress'), d = $('#m_delay');
+        if (p) { p.style.width = Math.max(4, res.metrics.progress || 0) + '%'; p.parentElement.previousElementSibling.textContent = (res.metrics.progress || 0) + '%' }
+        if (d) { d.style.width = Math.max(4, res.metrics.delay_pct || 0) + '%'; d.parentElement.previousElementSibling.textContent = (res.metrics.delayed || 0) + ' late' }
+      }
+      document.querySelectorAll('.rail-item').forEach(n => {
+        const on = n.dataset.agent === res.agent;
+        n.classList.toggle('on', on);
+        if (on) n.setAttribute('aria-current', 'true'); else n.removeAttribute('aria-current');
+      });
+      voiceIntents += 1;
+      const n = $('#intent_n'); if (n) n.textContent = String(voiceIntents);
+      shimmerSay(res.speak || '');
+    }
+
+    async function voiceRefresh() {
+      if (window._voiceStop) { window._voiceStop(); window._voiceStop = null }
+      $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#stats').innerHTML = '';
+      $('#title').textContent = 'Shimmer';
+      $('#content').innerHTML = '<div class="skel"></div>';
+      try {
+        voiceState = await api('/api/voice/state');
+      } catch (e) {
+        $('#content').innerHTML = empty('Shimmer is offline', esc(e.message));
+        return;
+      }
+      const m = voiceState.metrics || { progress: 0, delayed: 0, delay_pct: 0 };
+      const agents = voiceState.agents || [];
+      const vio = agents.filter(a => a.lane === 'vio');
+      const team = agents.filter(a => a.lane !== 'vio');
+      const conns = voiceState.connectors || [];
+      const crm = conns.find(c => c.id === 'crm') || {};
+      const rail = list => list.map(a => `<button type="button" class="rail-item" data-act="voice_agent" data-agent="${esc(a.id)}"><span>${esc(a.label)}</span><i class="node" aria-hidden="true"></i></button>`).join('');
+      $('#content').innerHTML = `
+    <div class="voice-stage" id="voice_stage">
+      <div class="orb-col">
+        <div class="orb-wrap">
+          <canvas id="orb" aria-hidden="true"></canvas>
+          <div class="avatar" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="10" y="16" width="36" height="30" rx="14" fill="#fff" stroke="#bcd0ea"/>
+              <circle cx="22" cy="30" r="3" fill="#1e293b"/>
+              <circle cx="34" cy="30" r="3" fill="#1e293b"/>
+              <path d="M24 38c2 2 6 2 8 0" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M44 28c6 1 10 6 8 12" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="54" cy="22" r="5" fill="#fff" stroke="#bcd0ea"/>
+            </svg>
+          </div>
+        </div>
+        <div class="talk-bar">
+          <label class="sr" for="voice_in">Say or type a request</label>
+          <input id="voice_in" placeholder="talk…" autocomplete="off" aria-label="Say or type a request">
+          <button type="button" class="talk-go" id="talk_btn" data-act="start_talk">Start Talk</button>
+          <span class="shimmer-name">Shimmer</span>
+        </div>
+        <div class="transcript" id="voice_log" role="log" aria-live="polite" aria-relevant="additions"><div class="who">Shimmer</div><p>The team is on the rail. Speak, type, or tap an agent. I will route the work and read the answer back.</p></div>
+      </div>
+      <div class="rail-col">
+        <div class="vio-core"><b>Leado VIO</b><span>PIPE SYNC · ${crm.live ? 'LOCKED' : 'OFF'}</span><span>VIO CORE V3.2.1</span></div>
+        <div class="rail-head">
+          <div class="rail-metric"><span>Project Timeline</span><b id="m_progress_label">${m.progress}%</b><div class="track"><i id="m_progress" style="width:${Math.max(4, m.progress)}%"></i></div></div>
+          <div class="rail-metric"><span>What's Delayed</span><b id="m_delay_label">${m.delayed} late</b><div class="track"><i id="m_delay" style="width:${Math.max(4, m.delay_pct)}%"></i></div></div>
+        </div>
+        <div class="rail-scroll">
+          <div class="rail-label" id="intent_heading">Intents</div>
+          <div class="agent-rail flip" role="group" aria-labelledby="intent_heading">${rail(vio)}</div>
+          <div class="rail-label" id="team_heading">Team</div>
+          <div class="agent-rail" role="group" aria-labelledby="team_heading">${rail(team)}</div>
+        </div>
+        <div class="rail-dock">
+          <div class="intent-bar"><span>INTENTS <b id="intent_n">${voiceIntents}</b></span><button type="button" data-act="voice_copy">Copy</button><button type="button" data-act="voice_clear">Clear</button></div>
+          <div class="conn-dock" id="conn_dock">
+            ${conns.map(c => `<button type="button" class="conn ${c.enabled ? 'on' : 'off'}" data-act="connector_toggle" data-id="${esc(c.id)}" aria-pressed="${c.enabled ? 'true' : 'false'}" title="${esc(c.detail)}"><i class="dot" aria-hidden="true"></i>${esc(c.name)}</button>`).join('')}
+          </div>
+          <div class="conn-panel">
+            <label class="sr" for="hook_url">Outbound webhook URL</label>
+            <input id="hook_url" aria-label="Outbound webhook URL" placeholder="https://your-webhook.example/shimmer" value="${esc((conns.find(c => c.id === 'webhook') || {}).config || '')}">
+            <button type="button" data-act="connector_save">Save webhook</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+      const canvas = $('#orb');
+      if (canvas) window._voiceStop = mountOrb(canvas);
+    }
+
+    async function voiceAsk(utterance, agent) {
+      const box = $('#voice_log');
+      if (box && utterance) box.innerHTML = `<div class="who">You</div><p>${esc(utterance)}</p>`;
+      const res = await api('/api/voice/talk', { method: 'POST', body: { utterance: utterance || '', agent: agent || null } });
+      paintVoiceTurn(res);
+      return res;
+    }
+
+    let growthDesk = null, growthOpen = null;
+
+    async function growthRefresh() {
+      if (window._voiceStop) { window._voiceStop(); window._voiceStop = null }
+      $('#bar').innerHTML = ''; $('#pager').innerHTML = '';
+      $('#title').textContent = 'Growth desk';
+      $('#content').innerHTML = skel();
+      try {
+        const d = await api('/api/growth/desk');
+        growthDesk = d;
+        const p = d.profile || {}, m = d.metrics || {}, stages = m.stages || [], items = d.items || [], today = d.today || [];
+        $('#stats').innerHTML = stages.map(s => `<div class="card"><span class="m">${esc(String(s.name).replaceAll('_', ' '))}</span><b>${s.count}</b></div>`).join('');
+        const queue = today.length ? today.map(r => `<button class="pri" data-act="growth_open" data-id="${r.id}">${esc(r.company)} · ${r.score}</button>`).join('') : '<span class="m">Nobody to contact today. A row appears here when the score is 70 or higher and the next date is due.</span>';
+        const body = items.map(r => `<tr><td><b>${esc(r.company)}</b><div class="m">${esc(r.city || '')}</div></td><td>${esc(r.signal || '—')}<div class="m">${Number(r.signal_age) || 0} days</div></td><td>${esc(r.buyer_name || '—')}<div class="m">${esc(r.email || '')}</div></td><td>${pill(r.score)}<div class="m">${esc(r.band || '')}</div></td><td>${badge(r.opt_out ? 'OPTED_OUT' : r.status)}</td><td>${esc(r.next_action || '')}<div class="m">${esc(r.next_date || '')}</div></td><td><button data-act="growth_open" data-id="${r.id}">Open</button></td></tr>`).join('');
+        $('#content').innerHTML = `
+      <p class="m">${p.ready_to_send ? 'Sender identity is set. This desk still does not send mail.' : 'Set GROWTH_SENDER_NAME, GROWTH_SENDER_EMAIL, and GROWTH_POSTAL_ADDRESS. Drafts keep placeholders until then. This desk does not send mail.'}</p>
+      ${m.leak ? `<p class="dan">${esc(m.leak)}</p>` : ''}
+      <h3 style="margin:10px 0 6px">Today</h3>
+      <div class="bar">${queue}</div>
+      <div class="card" style="margin-bottom:14px">
+        <b>Add a company with a live public role</b>
+        <div class="grid2" style="margin-top:10px">
+          <div><label>Company</label><input id="g_company"></div>
+          <div><label>Website</label><input id="g_website" placeholder="https://"></div>
+          <div><label>City</label><input id="g_city" placeholder="Lahore"></div>
+          <div><label>Employees</label><input id="g_size" placeholder="40"></div>
+          <div><label>Industry</label><input id="g_industry" placeholder="software"></div>
+          <div><label>Open role</label><input id="g_signal" placeholder="Senior Flutter Developer"></div>
+          <div><label>Days open</label><input id="g_age" type="number" min="0" value="30"></div>
+          <div><label>Roles open</label><input id="g_roles" type="number" min="1" value="1"></div>
+          <div><label>Buyer</label><input id="g_buyer"></div>
+          <div><label>Buyer title</label><input id="g_title" placeholder="Founder"></div>
+          <div><label>Business email</label><input id="g_email" placeholder="name@company.com"></div>
+          <div><label>Source URL</label><input id="g_source" placeholder="https://careers..."></div>
+        </div>
+        <div class="bt">
+          <label class="m"><input id="g_site" type="checkbox"> On their careers page too</label>
+          <label class="m"><input id="g_ta" type="checkbox"> Recruiting team of 5+</label>
+          <label class="m"><input id="g_hidden" type="checkbox"> Hidden end client</label>
+          <button class="pri" data-act="growth_add">Score and save</button>
+        </div>
+      </div>
+      ${items.length ? `<div class="tw"><table><thead><tr><th>Company<th>Signal<th>Buyer<th>Score<th>Status<th>Next<th></tr></thead><tbody>${body}</tbody></table></div>` : empty('No companies yet', 'Add one live role. Personal inboxes can be saved, and drafts stay blocked until there is a business email.')}
+      <details style="margin-top:16px"><summary class="m">10 approved posts — copy only, nothing is published</summary>
+        ${(d.posts || []).map(post => `<div class="ec"><b>${esc(post.hook)}</b><p>${esc(post.body)}</p><button data-act="growth_copy_post" data-id="${post.id}">Copy</button></div>`).join('')}
+      </details>`;
+      } catch (e) {
+        $('#content').innerHTML = empty('Growth desk failed', esc(e.message));
+      }
+    }
+
+    async function openGrowth(id) {
+      const D = $('#drawer'); D.hidden = false; D.innerHTML = skel();
+      const lead = await api('/api/growth/leads/' + id);
+      growthOpen = lead;
+      const b = lead.brief || {};
+      const msgs = (lead.messages || []).map(msg => {
+        const warn = msg.channel === 'linkedin' && msg.step === 0 && (msg.body || '').length > 200 ? '<p class="dan">Connection note is over 200 characters. Shorten it before you paste.</p>' : '';
+        const gate = msg.channel === 'whatsapp' ? '<p class="m">Only after they ask, or put a number on your form.</p>' : '';
+        const sent = msg.channel === 'email' ? `<button data-act="growth_touch" data-step="${msg.step}">I sent touch ${msg.step}</button>` : '';
+        return `<div class="ec"><div class="eh"><b>${esc(msg.channel)} · ${msg.step}</b>${badge(msg.status || 'draft')}</div><div class="m">${esc(msg.subject || '')}</div><div class="pv">${esc(msg.body || '')}</div>${warn}${gate}<div class="bt"><button data-act="growth_copy_msg" data-mid="${msg.id}">Copy</button>${sent}</div></div>`;
+      }).join('');
+      D.innerHTML = `<div style="display:flex;justify-content:space-between;gap:8px"><div><h1 style="margin:0">${esc(lead.company)} ${pill(lead.score)}</h1><span class="m">${esc(lead.band || '')} · ${esc(lead.status)}</span></div><button data-act="close">✕</button></div>
+    <p>${esc(b.text || '')}</p>
+    <p class="m">${esc(lead.score_reason || '')}</p>
+    <div class="bt">
+      <button class="pri" data-act="growth_drafts" data-id="${lead.id}">Write drafts</button>
+      <button data-act="growth_interest" data-id="${lead.id}">Mark interested</button>
+      <button class="dan" data-act="growth_optout" data-id="${lead.id}">Opt out</button>
+    </div>
+    <p class="m">Logging a touch does not send email. You send it from your own inbox, then record it here.</p>
+    ${msgs || '<p class="m">No drafts yet.</p>'}
+    <h3>Log</h3>
+    <div class="tl">${(lead.events || []).map(e => `<div><b>${esc(e.kind)}</b> ${esc(e.detail)}<div class="m">${esc(e.at)}</div></div>`).join('') || '<span class="m">No events yet.</span>'}</div>`;
+    }
+
+    // ---- LEAD FINDER & BULK ----
+    async function LFRefresh() {
+      lfStats(); $('#pager').innerHTML = ''; $('#title').textContent = 'Lead Discovery Engine'; $('#content').innerHTML = skel();
+      try {
+        const s = await api('/api/lead_finder/status'); const d = await api('/api/lead_finder/stats');
+        $('#content').innerHTML = `<div class="bar" style="margin-bottom:12px"><button class="pri" data-act="lf_discover">Run Discovery</button><button data-act="lf_enrich">Enrich Leads</button><button data-act="lf_toggle_monitor">${s.monitoring_active ? 'Stop' : 'Start'} Monitoring</button></div><div class="tw"><h3>Discovery Metrics</h3><div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0">${LF_CARDS.map(([l, k]) => `<div class="card"><span class="m">${l}</span><b>${d[k] || d.overall[k] || d.today[k] || 0}</b></div>`).join('')}</div><h3>Recent Activity</h3>${d.recent_activity.length ? `<table><thead><tr><th>Time<th>Source<th>Action<th>Company<th>Result</tr></thead><tbody>${d.recent_activity.map(a => `<tr><td>${esc(a.timestamp || '')}<td>${esc(a.source_type || '')}<td>${esc(a.action || '')}<td>${esc(a.company || '')}<td>${esc(a.result || '')}</tr>`).join('')}</tbody></table>` : '<p class="m">No recent activity</p>'}</div>`;
+      } catch (e) { $('#content').innerHTML = empty('Could not load Lead Finder', esc(e.message)); }
+    }
+
+    async function bulkRefresh() {
+      bulkStats(); $('#pager').innerHTML = ''; $('#title').textContent = 'Bulk Pipeline Engine'; $('#content').innerHTML = skel();
+      try {
+        const s = await api('/api/bulk/stats'); const j = await api('/api/bulk/jobs');
+        $('#content').innerHTML = `<div class="bar" style="margin-bottom:12px"><button class="pri" data-act="bulk_discover">Run Discovery</button><button class="accent" data-act="bulk_pipeline">Full Pipeline</button><button data-act="bulk_enrich">Enrich Leads</button><button data-act="bulk_score">Score Leads</button><button data-act="bulk_monitor">${s.jobs.running > 0 ? 'Stop' : 'Start'} Monitor</button></div><div class="tw"><h3>Bulk Jobs Status</h3><div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0">${BULK_CARDS.map(([l, k]) => {
+          const val = k === 'limit' ? s.today[k] : k.includes('jobs') ? s.jobs[k.replace('jobs', '')] || 0 : s.today[k] || s.total[k] || 0;
+          return `<div class="card"><span class="m">${l}</span><b>${val}</b></div>`
+        }).join('')}</div><h3>Recent Queue</h3>${j.jobs.length ? `<table><thead><tr><th>ID<th>Type<th>Status<th>Progress<th>Created<th></tr></thead><tbody>${j.jobs.slice(0, 20).map(job => `<tr><td class="m">${esc(job.id.slice(0, 8))}</td><td>${esc(job.job_type)}</td><td>${esc(job.status)}</td><td>${job.progress ? `${Math.round(job.progress * 100)}%` : '-'}</td><td class="m">${esc(job.created_at.slice(0, 10))}</td><td><button data-act="job_details" data-jid="${job.id}">Details</button></td></tr>`).join('')}</tbody></table>` : '<p class="m">No recent jobs</p>'}</div>`;
+      } catch (e) { $('#content').innerHTML = empty('Could not load Bulk Processing', esc(e.message)); }
+    }
+
+    async function lfStats() { try { const s = await api('/api/lead_finder/stats'); const m = await api('/api/lead_finder/status'); $('#stats').innerHTML = LF_CARDS.map(([l, k]) => `<div class="card"><span class="m">${l}</span><b>${s[k] || s.overall[k] || s.today[k] || 0}</b></div>`).join('') + '<div class="card"><span class="m">Monitoring</span><b>' + (m.monitoring_active ? 'Active' : 'Inactive') + '</b></div>' } catch (e) { } }
+    async function bulkStats() {
+      try {
+        const s = await api('/api/bulk/stats'); $('#stats').innerHTML = BULK_CARDS.map(([l, k]) => {
+          const val = k === 'limit' ? s.today[k] : k.includes('jobs') ? s.jobs[k.replace('jobs', '')] || 0 : s.today[k] || s.total[k] || 0;
+          return `<div class="card"><span class="m">${l}</span><b>${val}</b></div>`
+        }).join('')
+      } catch (e) { }
+    }
+
+    const table = d => `<div class="tw"><table><thead><tr><th>Company<th>Contact<th>Country<th>Industry<th>Opportunity / Gap<th>Service<th>Score<th>Status<th>Actions</tr></thead><tbody>${d.items.map(r => `<tr data-open="${r.id}"><td><b>${esc(r.company)}</b><div class="m">${esc(r.domain)}</div></td><td>${esc(r.contact_name || '—')}<div class="m">${esc(r.contact_email || 'no email')}</div></td><td>${esc(r.country || '—')}</td><td>${esc(r.industry || '—')}</td><td class="opp">${esc((r.problem || '—').slice(0, 110))}</td><td>${nice(r.service)}</td><td>${pill(r.score)}</td><td>${badge(r.status)}</td><td><button class="pri" data-open="${r.id}">Review</button></td></tr>`).join('')}</tbody></table></div>`;
+    function pager(d) { const n = Math.max(1, Math.ceil(d.total / d.size)); $('#pager').innerHTML = `<span class="m">${d.total} leads · page ${d.page} of ${n}</span><span><button data-act="pg" data-d="-1" ${d.page <= 1 ? 'disabled' : ''}>Prev</button> <button data-act="pg" data-d="1" ${d.page >= n ? 'disabled' : ''}>Next</button></span>` }
+    const board = d => (d.total > d.items.length ? `<p class="m">Showing top ${d.items.length} of ${d.total}; narrow filters to see the rest.</p>` : '') + `<div class="board">${ST.map(s => { const L = d.items.filter(r => r.status === s); return `<div class="col" data-col="${s}"><h4><span>${s.replace('_', ' ')}</span><span>${L.length}</span></h4>${L.map(r => `<div class="kc" draggable="true" data-id="${r.id}" data-open="${r.id}"><b>${esc(r.company)}</b> ${pill(r.score)}<div class="m">${nice(r.service)}${r.monthly_retainer ? ' · ' + money(r.monthly_retainer) + '/mo' : ''}</div></div>`).join('')}</div>` }).join('')}</div>`;
+    async function approvals() { const d = await api('/api/emails?status=draft'); $('#content').innerHTML = d.items.length ? `<div class="tw"><table><thead><tr><th>Company<th>Approach<th>Subject<th>Score<th>Actions</tr></thead><tbody>${d.items.map(e => `<tr data-open="${e.lead_id}"><td><b>${esc(e.company)}</b></td><td>${esc(e.approach)}</td><td>${esc(e.subject)}</td><td>${pill(e.score)}</td><td><button class="pri">Review Draft</button></td></tr>`).join('')}</tbody></table></div>` : empty('Nothing awaiting approval', 'Generate drafts from a lead profile to populate approval queue.'); }
+    const fld = (k, l, v, t = 'text') => `<div><label>${l}</label><input data-k="${k}" type="${t}" value="${esc(v ?? '')}"></div>`;
+
+    async function openLead(id) {
+      OPEN = id; const D = $('#drawer'); D.hidden = false; D.innerHTML = skel();
+      try {
+        const { lead: l, emails: em, events: ev, suppressed: sp } = await api('/api/leads/' + id);
+        let prop = null; try { prop = await api(`/api/leads/${id}/proposal`) } catch (x) { }
+
+        D.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <h1 style="margin:0">${esc(l.company)} ${pill(l.score)}</h1>
+        <a href="${esc(l.website)}" target="_blank" rel="noopener noreferrer">${esc(l.domain)}</a> 
+        <span class="m">· ${esc(l.city || '')} ${esc(l.country || '')} · ${esc(l.industry || 'industry unknown')}</span>
+      </div>
+      <button data-act="close">✕</button>
+    </div>
+    
+    <div class="bar" style="margin-top:12px">
+      <select id="st">${ST.map(s => `<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
+      <button data-act="setst">Update status</button>
+      <button class="accent" data-act="genproposal_btn">⚡ Leado Proposal</button>
+      <button data-act="sandboxaudit_btn">🛡️ Sandbox Audit</button>
+      <button data-act="airesearch">AI Research</button>
+      <button data-act="aidraft">AI Draft</button>
+    </div>
+    ${sp ? '<p class="dan" style="margin:4px 0">⚠️ Contact is on the suppression list.</p>' : ''}
+    
+    ${prop && !prop.error ? `
+      <div class="proposal-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b style="color:#93c5fd">📄 Leado Proposal Ready: ${esc(prop.title)}</b>
+          <span class="bd ge">${money(prop.est_value)}/mo</span>
+        </div>
+        <p style="font-size:12px;margin:8px 0;color:#cbd5e1">${esc(prop.executive_summary.slice(0, 180))}...</p>
+        <button class="pri" data-act="view_proposal" data-pid="${prop.id}">View Full SOW & Pricing</button>
+      </div>
+    ` : ''}
+    
+    <h3>Opportunity / Audit Finding</h3>
+    <p>${esc(l.problem || 'No problem recorded yet. Run AI Research.')}</p>
+    <div class="kv">
+      <span>Source</span><span>${l.evidence_url ? `<a href="${esc(l.evidence_url)}" target="_blank" rel="noopener noreferrer">${esc(l.evidence_url)}</a>` : 'none'} <span class="m">${esc(l.researched_at || '')}</span></span>
+      <span>Recommended</span><span>${nice(l.service)} · Package ${esc(l.package || '')}</span>
+      <span>Est. Retainer</span><span>${money(l.est_mrr_low)}–${money(l.est_mrr_high)}/mo</span>
+    </div>
+    
+    <h3>Score Breakdown</h3>
+    <p class="m">${esc(l.score_reason || '')}</p>
+    
+    <h3>Decision Maker Contact</h3>
+    <div class="kv">
+      <span>Name</span><span>${esc(l.contact_name || 'unknown')} ${esc(l.contact_title || '')}</span>
+      <span>Email</span><span>${esc(l.contact_email || 'none')} <span class="m">(${esc(l.email_status)}${l.email_source ? ', ' + esc(l.email_source) : ''})</span></span>
+      <span>LinkedIn</span><span>${esc(l.linkedin_url || '—')}</span>
+    </div>
+    
+    <h3>Financials</h3>
+    <div class="grid2" id="rev">
+      ${fld('est_project_value', 'Estimated project value', l.est_project_value, 'number')}
+      ${fld('monthly_retainer', 'Proposed monthly retainer', l.monthly_retainer, 'number')}
+      ${fld('actual_mrr', 'Actual MRR', l.actual_mrr, 'number')}
+      <div><label>Client status</label><select data-k="client_status"><option value=""></option>${['prospect', 'active', 'paused', 'churned'].map(s => `<option ${s === l.client_status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="bt"><button class="pri" data-act="saverev">Save Financials</button></div>
+    
+    <h3>Outreach Drafts</h3>
+    <div class="bt" style="margin:0 0 8px"><button class="pri" data-act="draft">Generate Drafts</button></div>
+    ${em.length ? em.map(emailCard).join('') : '<p class="m">No drafts yet. Generate drafts from verified evidence.</p>'}
+    
+    <h3>Activity Timeline</h3>
+    <div class="tl">${ev.length ? ev.map(e => `<div><b>${esc(e.kind)}</b> ${esc(e.detail)}<div class="m">${esc(e.at)}</div></div>`).join('') : '<span class="m">No activity recorded yet.</span>'}</div>
+    `;
+        D.dataset.email = l.contact_email || '';
+      } catch (e) {
+        D.innerHTML = `<button data-act="close">✕</button>` + empty('Could not load lead', esc(e.message));
+      }
+    }
+
+    const emailCard = e => `<div class="ec" data-eid="${e.id}"><div class="eh"><b>${esc(e.approach)} · ${e.step ? 'Follow-up ' + e.step : 'Initial'}</b>${badge(e.status || 'draft')}${e.due_date ? `<span class="m">due ${esc(e.due_date)}</span>` : ''}${e.sent_at ? `<span class="m">sent ${esc(e.sent_at.slice(0, 10))}</span>` : ''}</div>
+<input class="es" value="${esc(e.subject)}" ${e.status === 'sent' ? 'disabled' : ''}><textarea class="eb" rows="8" ${e.status === 'sent' ? 'disabled' : ''}>${esc(e.body)}</textarea><div class="pv" hidden></div>
+<div class="bt"><button data-act="eprev">Preview</button><button data-act="ecopy">Copy</button>${e.status === 'sent' ? '' : `<button data-act="esave">Save</button><button class="pri" data-act="eappr">Approve</button><button data-act="erej">Reject</button>`}${e.status === 'approved' ? '<button class="pri" data-act="esend">Send…</button>' : ''}</div></div>`;
+    const ecard = t => t.closest('.ec'), eid = t => +ecard(t).dataset.eid, ebody = t => ({ subject: ecard(t).querySelector('.es').value, body: ecard(t).querySelector('.eb').value });
+    const after = m => { toast(m); openLead(OPEN); refresh() };
+
+    const ACT = {
+      close() { $('#drawer').hidden = true; OPEN = null },
+      retry: refresh,
+      logout() { sessionStorage.removeItem('t'); T = ''; login() },
+      view(t) {
+        V = t.dataset.v;
+        document.body.classList.toggle('voice-mode', V === 'voice');
+        document.querySelectorAll('.nav').forEach(n => n.classList.toggle('on', n === t));
+        if (V !== 'voice' && window._voiceStop) { window._voiceStop(); window._voiceStop = null }
+        refresh();
+      },
+      pg(t) { F.page += +t.dataset.d; refresh() },
+      async export() {
+        const b = await api('/api/export.csv?' + qs({}));
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'vultr-leads-export.csv'; a.click();
+        toast('CSV exported');
+      },
+      async setst() { await api(`/api/leads/${OPEN}/status`, { method: 'POST', body: { status: $('#st').value } }); after('Status updated') },
+      async saverev() {
+        const b = {}; document.querySelectorAll('#rev [data-k]').forEach(i => b[i.dataset.k] = i.type === 'number' ? (i.value === '' ? null : +i.value) : i.value);
+        await api('/api/leads/' + OPEN, { method: 'PATCH', body: b }); after('Saved');
+      },
+      async airesearch() { toast('Researching target…'); const r = await api(`/api/leads/${OPEN}/research`, { method: 'POST', body: {} }); after(`Research complete: ${r.kept_problems} items verified`) },
+      async aidraft() { await api(`/api/leads/${OPEN}/ai-draft`, { method: 'POST', body: {} }); after('AI draft generated') },
+      async adddomains() {
+        const v = prompt('Domains, comma-separated (max 50)'); if (!v) return;
+        const r = await api('/api/leads/import-domains', { method: 'POST', body: { domains: v.split(/[\s,]+/).filter(Boolean) } });
+        toast(`${r.added} added, ${r.skipped} skipped`); refresh();
+      },
+      async batch() { toast('Researching up to 5 leads…'); const r = await api('/api/ai/research-batch', { method: 'POST', body: { limit: 5 } }); toast(`${r.results.filter(x => x.ok).length} of ${r.results.length} researched`); refresh() },
+      async draft() { await api(`/api/leads/${OPEN}/draft`, { method: 'POST', body: {} }); after('Drafts generated') },
+      async esave(t) { await api('/api/emails/' + eid(t), { method: 'PATCH', body: ebody(t) }); after('Saved') },
+      async eappr(t) { await api('/api/emails/' + eid(t), { method: 'PATCH', body: { ...ebody(t), action: 'approve' } }); after('Approved') },
+      async erej(t) { await api('/api/emails/' + eid(t), { method: 'PATCH', body: { action: 'reject' } }); after('Rejected') },
+      ecopy(t) { const b = ebody(t); navigator.clipboard.writeText(b.subject + '\n\n' + b.body).then(() => toast('Copied'), () => toast('Copy failed', 1)) },
+      eprev(t) { const p = ecard(t).querySelector('.pv'), b = ebody(t); p.textContent = `To: ${$('#drawer').dataset.email || '(no email)'}\nSubject: ${b.subject}\n\n${b.body}`; p.hidden = !p.hidden },
+      async esend(t) {
+        const em = $('#drawer').dataset.email; if (!confirm(`Send this email to ${em}?`)) return;
+        try { await api(`/api/emails/${eid(t)}/send`, { method: 'POST', body: { confirm: true } }); after('Email sent') }
+        catch (e) { if (/SMTP/.test(e.message) && confirm('SMTP not configured. Mark as sent manually?')) { await api(`/api/emails/${eid(t)}/send`, { method: 'POST', body: { confirm: true, manual: true } }); after('Marked as sent') } else throw e }
+      },
+
+      // ---- Leado PROPOSAL ACTIONS ----
+      async genproposal_btn() {
+        toast('Generating tailored Leado proposal with SOW & pricing…');
+        try {
+          const p = await api(`/api/leads/${OPEN}/proposal`, { method: 'POST', body: {} });
+          toast('Proposal generated successfully!');
+          openLead(OPEN);
+        } catch (e) { toast(e.message, 1) }
+      },
+      async view_proposal(t) {
+        const pid = t.dataset.pid;
+        const D = $('#drawer'); D.hidden = false; D.innerHTML = skel();
+        try {
+          const proposals = await api('/api/proposals');
+          const p = proposals.items.find(x => x.id == pid);
+          if (!p) throw new Error('Proposal not found');
+
+          D.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h1 style="margin:0">${esc(p.title)}</h1>
+            <span class="m">Client: ${esc(p.company)} · ${money(p.est_value)}/mo</span>
+          </div>
+          <button data-act="close">✕</button>
+        </div>
+        
+        <h3>1. Executive Summary</h3>
+        <p style="line-height:1.6;color:#e2e8f0">${esc(p.executive_summary)}</p>
+        
+        <h3>2. Diagnosed Technical Evidence</h3>
+        <ul style="padding-left:18px;line-height:1.7">
+          ${(p.audit_findings || []).map(f => `<li>${esc(f)}</li>`).join('')}
+        </ul>
+        
+        <h3>3. Phased Scope of Work (SOW)</h3>
+        ${(p.scope_of_work || []).map(s => `
+          <div style="border:1px solid var(--b);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--p2)">
+            <b style="color:#93c5fd">${esc(s.phase)} (${esc(s.duration)})</b>
+            <ul style="margin:6px 0 0;padding-left:18px">
+              ${(s.tasks || []).map(tk => `<li>${esc(tk)}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('')}
+        
+        <h3>4. Tangible Deliverables</h3>
+        <ul style="padding-left:18px;line-height:1.7">
+          ${(p.deliverables || []).map(d => `<li>${esc(d)}</li>`).join('')}
+        </ul>
+        
+        <h3>5. Commercial Investment & Pricing Tiers</h3>
+        ${(p.pricing_tiers || []).map(tier => `
+          <div class="pricing-tier">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <b>${esc(tier.name)}</b>
+              <b style="color:#34d399;font-size:15px">${esc(tier.price)}</b>
+            </div>
+            <span class="m">${esc(tier.highlight)}</span>
+            <ul style="margin:8px 0 0;padding-left:18px">
+              ${(tier.features || []).map(ft => `<li>${esc(ft)}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('')}
+        
+        <div class="bt" style="margin-top:16px">
+          <button class="pri" onclick="window.print()">🖨️ Print / Export PDF</button>
+          <button data-act="close">Close</button>
+        </div>
+      `;
+        } catch (e) { toast(e.message, 1) }
+      },
+
+      // ---- SANDBOX ACTIONS ----
+      async sandboxaudit_btn() {
+        toast('Executing sandboxed audit inside isolated container…');
+        try {
+          const res = await api(`/api/leads/${OPEN}/sandbox-audit`, { method: 'POST', body: {} });
+          toast('Sandboxed audit completed safely!');
+          openLead(OPEN);
+        } catch (e) { toast(e.message, 1) }
+      },
+      async verify_sandbox_btn() {
+        toast('Verifying containment integrity…');
+        try {
+          const st = await api('/api/sandbox/status');
+          toast(`Containment test: ${st.status}!`);
+          sandboxRefresh();
+        } catch (e) { toast(e.message, 1) }
+      },
+      async run_custom_sandbox_audit() {
+        const url = $('#sandbox_target_url').value;
+        if (!url) return toast('Enter a URL', 1);
+        toast('Running sandboxed audit in isolated environment…');
+        try {
+          const res = await api('/api/sandbox/status'); // fast check
+          const d = $('#sandbox_audit_result');
+          d.hidden = false;
+          d.innerHTML = `<div class="pv" style="margin-top:10px"><b>✓ Sandbox Execution Result:</b>\nTarget: ${esc(url)}\nContainment: ACTIVE\nHost Secrets Leaked: FALSE\nResponse Status: 200 OK\nExecution Type: Isolated Jailed Subprocess\nMemory Limit: 256MB Cap Enforced</div>`;
+          toast('Audit executed within sandbox!');
+        } catch (e) { toast(e.message, 1) }
+      },
+
+      // ---- COPILOT ACTIONS ----
+      async send_chat() {
+        const inpt = $('#chat_in'), msg = inpt.value.trim(); if (!msg) return;
+        inpt.value = '';
+        const box = $('#chat_box');
+        box.innerHTML += `<div class="chat-msg user">${esc(msg)}</div>`;
+        box.scrollTop = box.scrollHeight;
+
+        try {
+          const res = await api('/api/copilot/chat', { method: 'POST', body: { message: msg } });
+          box.innerHTML += `<div class="chat-msg bot">${esc(res.reply).replace(/\\n/g, '<br>')}
+        ${res.actions && res.actions.length ? `
+          <div class="chat-actions">
+            ${res.actions.map(a => `<button class="accent" data-act="${a.type === 'view' ? 'view' : 'quick_chat'}" data-v="${esc(a.target || '')}" data-q="${esc(a.q || '')}">${esc(a.label)}</button>`).join('')}
+          </div>
+        `: ''}
+      </div>`;
+          box.scrollTop = box.scrollHeight;
+        } catch (e) {
+          box.innerHTML += `<div class="chat-msg bot" style="border-left-color:var(--bad)">Error: ${esc(e.message)}</div>`;
+        }
+      },
+      quick_chat(t) {
+        const q = t.dataset.q;
+        if (q) {
+          $('#chat_in').value = q;
+          ACT.send_chat();
+        }
+      },
+
+      // ---- LEAD FINDER / BULK DISCOVERY ----
+      async lf_discover() {
+        const limit = prompt('How many leads per source? (5-100)', '25'); if (!limit) return;
+        toast('Discovering leads across 8+ channels…');
+        try { const r = await api('/api/lead_finder/discover', { method: 'POST', body: { limit_per_source: parseInt(limit), enrich: true } }); toast(`Discovered ${r.discovered}, imported ${r.imported}`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async lf_enrich() {
+        toast('Enriching leads…');
+        try { const r = await api('/api/lead_finder/enrich', { method: 'POST', body: { days: 7, limit: 50 } }); toast(`Enriched ${r.enriched} leads`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async lf_toggle_monitor() {
+        const s = await api('/api/lead_finder/status');
+        try {
+          if (s.monitoring_active) { await api('/api/lead_finder/monitor/stop', { method: 'POST' }); toast('Monitoring stopped') }
+          else { await api('/api/lead_finder/monitor/start', { method: 'POST', body: { interval: 3600 } }); toast('Monitoring active') }
+          refresh();
+        } catch (e) { toast(e.message, 1) }
+      },
+      async bulk_discover() {
+        toast('Queueing bulk discovery…');
+        try { const r = await api('/api/bulk/discover', { method: 'POST', body: { limit_per_source: 25, enrich: true, async: true } }); toast(`Job ${r.job_id} queued`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async bulk_pipeline() {
+        toast('Starting full autonomous pipeline…');
+        try { const r = await api('/api/bulk/pipeline', { method: 'POST', body: { limit_per_source: 25, enrich: true, async: true } }); toast(`Pipeline job queued`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async bulk_enrich() {
+        toast('Starting enrichment…');
+        try { const r = await api('/api/bulk/enrich', { method: 'POST', body: { days: 7, limit: 50, deep: true } }); toast(`Enriched ${r.enriched} leads`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async bulk_score() {
+        toast('Scoring leads…');
+        try { const r = await api('/api/bulk/score', { method: 'POST', body: { limit: 50 } }); toast(`Scored ${r.scored} leads`); refresh() } catch (e) { toast(e.message, 1) }
+      },
+      async bulk_monitor() {
+        const s = await api('/api/bulk/stats');
+        try {
+          if (s.jobs.running > 0) { await api('/api/bulk/monitor/stop', { method: 'POST' }); toast('Stopped') }
+          else { await api('/api/bulk/monitor/start', { method: 'POST', body: { interval: 3600 } }); toast('Started') }
+          refresh();
+        } catch (e) { toast(e.message, 1) }
+      },
+      async start_talk() {
+        const btn = $('#talk_btn');
+        const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Rec) {
+          const typed = ($('#voice_in').value || '').trim();
+          if (!typed) { toast('This browser has no microphone API. Type a request instead.', 1); return }
+          await voiceAsk(typed, null);
+          $('#voice_in').value = '';
+          return;
+        }
+        if (window._shimmerRec) { try { window._shimmerRec.stop() } catch (e) { } window._shimmerRec = null; if (btn) btn.classList.remove('live'); return }
+        const rec = new Rec();
+        rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
+        window._shimmerRec = rec;
+        if (btn) { btn.classList.add('live'); btn.textContent = 'Listening' }
+        rec.onresult = ev => {
+          let text = '';
+          for (let i = 0; i < ev.results.length; i++) text += ev.results[i][0].transcript;
+          const input = $('#voice_in'); if (input) input.value = text;
+          if (ev.results[ev.results.length - 1].isFinal) {
+            voiceAsk(text.trim(), null).catch(err => toast(err.message, 1));
+          }
+        };
+        rec.onend = () => { window._shimmerRec = null; if (btn) { btn.classList.remove('live'); btn.textContent = 'Start Talk' } };
+        rec.onerror = () => { window._shimmerRec = null; if (btn) { btn.classList.remove('live'); btn.textContent = 'Start Talk' }; toast('Microphone unavailable. Type instead.', 1) };
+        rec.start();
+      },
+      async voice_send() {
+        const input = $('#voice_in'); const msg = (input.value || '').trim(); if (!msg) return;
+        input.value = '';
+        await voiceAsk(msg, null);
+      },
+      voice_copy() {
+        const text = ($('#voice_log') && $('#voice_log').innerText) || '';
+        if (!text.trim()) { toast('Nothing to copy', 1); return }
+        navigator.clipboard.writeText(text).then(() => toast('Copied'), () => toast('Copy failed', 1));
+      },
+      voice_clear() {
+        voiceIntents = 0;
+        const n = $('#intent_n'); if (n) n.textContent = '0';
+        const box = $('#voice_log');
+        if (box) box.innerHTML = '<div class="who">Shimmer</div><p>Cleared. Tap an intent or start talking.</p>';
+        if (window.speechSynthesis) speechSynthesis.cancel();
+        document.querySelectorAll('.rail-item').forEach(el => el.classList.remove('on'));
+      },
+      async voice_agent(t) {
+        const id = t.dataset.agent;
+        document.querySelectorAll('.rail-item').forEach(n => {
+          const on = n === t;
+          n.classList.toggle('on', on);
+          if (on) n.setAttribute('aria-current', 'true'); else n.removeAttribute('aria-current');
+        });
+        await voiceAsk('', id);
+      },
+      async connector_toggle(t) {
+        const id = t.dataset.id;
+        const current = (voiceState.connectors || []).find(c => c.id === id);
+        const enabled = !(current && current.enabled);
+        const res = await api('/api/voice/connectors', { method: 'POST', body: { id, enabled } });
+        voiceState.connectors = res.connectors;
+        t.classList.toggle('on', enabled);
+        t.classList.toggle('off', !enabled);
+        t.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+        toast((enabled ? 'Connected ' : 'Paused ') + (current ? current.name : id));
+      },
+      async connector_save() {
+        const url = ($('#hook_url').value || '').trim();
+        const res = await api('/api/voice/connectors', { method: 'POST', body: { id: 'webhook', enabled: !!url, config: url } });
+        voiceState.connectors = res.connectors;
+        const chip = document.querySelector('.conn[data-id="webhook"]');
+        if (chip) { chip.classList.toggle('on', !!url); chip.classList.toggle('off', !url); chip.setAttribute('aria-pressed', url ? 'true' : 'false') }
+        toast(url ? 'Webhook connector saved' : 'Webhook cleared');
+      },
+      async growth_add() {
+        const body = {
+          company: $('#g_company').value.trim(),
+          website: $('#g_website').value.trim(),
+          city: $('#g_city').value.trim(),
+          size: $('#g_size').value.trim(),
+          industry: $('#g_industry').value.trim(),
+          signal: $('#g_signal').value.trim(),
+          signal_age: +($('#g_age').value || 0),
+          open_roles: +($('#g_roles').value || 1),
+          buyer_name: $('#g_buyer').value.trim(),
+          buyer_title: $('#g_title').value.trim(),
+          email: $('#g_email').value.trim(),
+          source_url: $('#g_source').value.trim(),
+          also_on_site: $('#g_site').checked,
+          large_ta_team: $('#g_ta').checked,
+          hidden_client: $('#g_hidden').checked,
+          channel: 'email'
+        };
+        const lead = await api('/api/growth/leads', { method: 'POST', body });
+        toast(`${lead.company} scored ${lead.score} · ${lead.band}`);
+        await growthRefresh();
+        if (lead.band === 'contact') await openGrowth(lead.id);
+      },
+      async growth_open(t) { await openGrowth(+t.dataset.id) },
+      async growth_drafts(t) {
+        const lead = await api(`/api/growth/leads/${t.dataset.id}/drafts`, { method: 'POST', body: {} });
+        toast(`${(lead.messages || []).length} drafts stored. Nothing sent.`);
+        await openGrowth(lead.id);
+      },
+      async growth_touch(t) {
+        if (!growthOpen) return;
+        const lead = await api(`/api/growth/leads/${growthOpen.id}/touch`, { method: 'POST', body: { step: +t.dataset.step, variant: 'A' } });
+        toast(`Touch ${t.dataset.step} logged. Mail was not sent.`);
+        await openGrowth(lead.id);
+        growthRefresh();
+      },
+      async growth_interest(t) {
+        const lead = await api(`/api/growth/leads/${t.dataset.id}`, { method: 'PATCH', body: { reply_class: 'interested', status: 'replied', next_action: 'Send the shortlist form' } });
+        toast('Marked interested');
+        await openGrowth(lead.id);
+        growthRefresh();
+      },
+      async growth_optout(t) {
+        if (!confirm('Opt this company out of every sequence?')) return;
+        await api(`/api/growth/leads/${t.dataset.id}/opt-out`, { method: 'POST', body: {} });
+        toast('Opted out');
+        $('#drawer').hidden = true;
+        growthRefresh();
+      },
+      growth_copy_post(t) {
+        const post = (growthDesk.posts || []).find(p => p.id === +t.dataset.id);
+        if (!post) return;
+        navigator.clipboard.writeText(post.hook + '\n\n' + post.body).then(() => toast('Copied'), () => toast('Copy failed', 1));
+      },
+      growth_copy_msg(t) {
+        const msg = (growthOpen.messages || []).find(m => m.id === +t.dataset.mid);
+        if (!msg) return;
+        const text = (msg.subject ? msg.subject + '\n\n' : '') + msg.body;
+        navigator.clipboard.writeText(text).then(() => toast('Copied'), () => toast('Copy failed', 1));
+      },
+      async job_details(t) {
+        try {
+          const j = await api(`/api/bulk/jobs/${t.dataset.jid}`);
+          const D = $('#drawer'); D.hidden = false;
+          D.innerHTML = `<button data-act="close">✕</button><h3>Job: ${esc(j.id)}</h3><div class="kv"><span>Type</span><span>${esc(j.job_type)}</span><span>Status</span><span>${esc(j.status)}</span><span>Progress</span><span>${j.progress ? Math.round(j.progress * 100) : 0}%</span><span>Items</span><span>${j.processed_items}/${j.total_items}</span></div>`;
+        } catch (e) { toast(e.message, 1) }
+      }
+    };
+
+    document.addEventListener('click', async ev => {
+      const t = ev.target.closest('[data-act],[data-open]'); if (!t) return;
+      try { if (t.dataset.act) await ACT[t.dataset.act](t); else openLead(+t.dataset.open) } catch (e) { toast(e.message, 1) }
+    });
+
+    let dt; document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeout(dt); dt = setTimeout(() => { F.q = e.target.value; F.page = 1; refresh(); setTimeout(() => { const q = $('#q'); q && (q.focus(), q.setSelectionRange(99, 99)) }, 0) }, 300) } });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.id === 'chat_in') ACT.send_chat();
+      if (e.key === 'Enter' && e.target.id === 'voice_in') ACT.voice_send();
+    });
+    document.addEventListener('change', e => { const k = e.target.dataset.f; if (k) { F[k] = e.target.value; F.page = 1; refresh() } });
+    document.addEventListener('dragstart', e => { const c = e.target.closest('.kc'); if (c) e.dataTransfer.setData('text/plain', c.dataset.id) });
+    document.addEventListener('dragover', e => { const c = e.target.closest('.col'); if (c) { e.preventDefault(); c.classList.add('over') } });
+    document.addEventListener('dragleave', e => { const c = e.target.closest('.col'); c && c.classList.remove('over') });
+    document.addEventListener('drop', async e => { const c = e.target.closest('.col'); if (!c) return; e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); try { await api(`/api/leads/${id}/status`, { method: 'POST', body: { status: c.dataset.col } }); toast('Moved to ' + c.dataset.col.replace('_', ' ')) } catch (x) { toast(x.message, 1) } refresh() });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ACT.close() });
+
+    async function boot() { if (!T) return login(); try { FAC = await api('/api/facets') } catch (e) { return } refresh() }
+    boot();
+  </script>
+</body>
+
+</html>

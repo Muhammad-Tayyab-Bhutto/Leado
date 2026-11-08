@@ -1,0 +1,29 @@
+services:
+  leado:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leado-vultr-agent
+    restart: unless-stopped
+    init: true
+    ports:
+      # Set APP_PORT=80 in production so the app is reachable at http://<vm-ip>/
+      - "${APP_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      - SOFTORA_HOST=0.0.0.0
+      - SOFTORA_PORT=8000
+      - VULTR_MODEL=${VULTR_MODEL:-meta/llama-3.1-70b-instruct}
+    volumes:
+      # Persistent SQLite state. deploy_vultr.sh ensures these files exist first.
+      - ./leads.db:/app/leads.db
+      - ./lead_finder.db:/app/lead_finder.db
+      # Used by sandbox.py to launch ephemeral audit containers on the host.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
