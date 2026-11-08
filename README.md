@@ -121,6 +121,7 @@ required value is a login token of at least 16 characters.
 | `SOFTORASYSTEMS_ADDRESS` | Recommended | Physical address injected into outreach for CAN-SPAM/GDPR compliance. |
 | `GROWTH_SENDER_NAME` / `GROWTH_SENDER_EMAIL` / `GROWTH_POSTAL_ADDRESS` | Recommended | Growth-desk sender identity. |
 | `SOFTORA_HOST` / `SOFTORA_PORT` | — | Bind address and port (default `127.0.0.1:8000`; Compose sets `0.0.0.0`). |
+| `DOMAIN` | Recommended | Public hostname. When set, `deploy_vultr.sh` starts Caddy and provisions HTTPS automatically. |
 
 Optional data-provider keys (`HUNTER_API_KEY`, `SERPAPI_API_KEY`,
 `CLEARBIT_API_KEY`, `CRUNCHBASE_API_KEY`, CAPTCHA solvers, SMTP) are read from
@@ -132,10 +133,11 @@ the same file. Missing keys disable only the corresponding integration.
 
 The full runbook is in **[`DEPLOY_VULTR.md`](DEPLOY_VULTR.md)**. Short version:
 
-1. Launch **Ubuntu 24.04 LTS x64** on Cloud Compute (1 vCPU / 2 GB recommended).
+1. Launch **Ubuntu 24.04 LTS x64** (or Debian 12/13) on Cloud Compute (1 vCPU / 2 GB recommended).
 2. Allow ports **22, 80, 443** in the Vultr firewall group.
 3. Copy the project to `/opt/leado`.
-4. Run:
+4. Set `DOMAIN` in `.env` for automatic HTTPS, or leave it blank for plain HTTP.
+5. Run:
 
 ```bash
 cd /opt/leado
@@ -144,8 +146,12 @@ chmod +x deploy_vultr.sh
 ```
 
 The script installs Docker, configures `ufw`, generates a token, builds the
-image, starts it on port 80, and verifies health. The app is then available at
-`http://<vm-ip>/`.
+image, and verifies health. With `DOMAIN` set it starts **Caddy** on 80/443 and
+obtains a Let's Encrypt certificate automatically; the app itself is bound to
+`127.0.0.1:8000`. Without a domain it publishes the app on port 80.
+
+**Current production target:** Vultr Cloud Compute (Mumbai, `65.20.76.188`) at
+`https://leado.softorasystems.com` — point an `A` record for `leado` at that IP.
 
 ---
 

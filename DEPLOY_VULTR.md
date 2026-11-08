@@ -65,6 +65,9 @@ Set at minimum:
 VULTR_INFERENCE_API_KEY=your_vultr_inference_api_key_here
 VULTR_MODEL=meta/llama-3.1-70b-instruct
 
+# Public hostname — enables Caddy + automatic HTTPS
+DOMAIN=leado.example.com
+
 # Login token — leave blank and the deploy script generates a random one
 SOFTORASYSTEMS_TOKEN=
 ```
@@ -87,14 +90,16 @@ The script re-execs itself with `sudo` and:
 2. opens `22/80/443` in `ufw`,
 3. creates `.env` and a random `SOFTORASYSTEMS_TOKEN` if missing,
 4. ensures the SQLite files exist (avoids Docker creating directories),
-5. builds and starts the container on **port 80**,
-6. waits for a healthy response and prints the URL + token.
+5. builds and starts the app,
+6. if `DOMAIN` is set, starts **Caddy** on 80/443 and obtains a Let's Encrypt
+   certificate automatically; otherwise publishes the app on port 80,
+7. waits for a healthy response and prints the URL + token.
 
-Expected output:
+Expected output with a domain:
 
 ```
 🎉 DEPLOYMENT SUCCESSFUL ON VULTR!
-App URL:      http://<VULTR_VM_IP>/
+App URL:      https://leado.example.com/
 Access token: <generated token>
 ```
 
@@ -107,14 +112,18 @@ Open the URL and paste the token into the login screen.
 ```bash
 cd /opt/leado
 
-docker compose ps                 # status
-docker compose logs -f --tail=100 # logs
-docker compose restart            # restart
-docker compose down               # stop
+# With DOMAIN set (Caddy + HTTPS)
+docker compose -f docker-compose.yml -f docker-compose.tls.yml ps
+docker compose -f docker-compose.yml -f docker-compose.tls.yml logs -f --tail=100
+docker compose -f docker-compose.yml -f docker-compose.tls.yml restart
+
+# Without a domain (plain HTTP)
+docker compose ps
+docker compose logs -f --tail=100
 
 # Update after code changes
 rsync ... ./ root@<IP>:/opt/leado/   # from your machine
-ssh root@<IP> 'cd /opt/leado && docker compose up -d --build'
+ssh root@<IP> 'cd /opt/leado && ./deploy_vultr.sh'
 ```
 
 The SQLite databases (`leads.db`, `lead_finder.db`) are bind-mounted from the
@@ -126,38 +135,34 @@ sqlite3 /opt/leado/leads.db ".backup '/opt/leado/backups/leads-$(date +%F).db'"
 
 ---
 
-## 6. Optional: HTTPS with a domain
+## 6. HTTPS with a domain (automatic)
 
-Point an `A` record at the VM, then add a Caddy reverse proxy:
+Set the hostname in `.env`:
 
-```yaml
-# docker-compose.tls.yml
-services:
-  leado:
-    ports: !reset []
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports: ["80:80", "443:443"]
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-volumes:
-  caddy_data:
+```dotenv
+DOMAIN=leado.example.com
 ```
 
-```caddyfile
-# Caddyfile
-leado.example.com {
-    reverse_proxy leado:8000
-}
-```
+Point an **A record** for that hostname at the VM's public IP, then re-run:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+./deploy_vultr.sh
 ```
 
-Caddy obtains a free Let's Encrypt certificate automatically.
+The script starts `docker-compose.tls.yml`, which runs **Caddy** on ports 80/443
+and proxies to the app over the internal Docker network. Caddy obtains and
+renews a free Let's Encrypt certificate automatically — no manual certificate
+management.
+
+The app container is bound to `127.0.0.1:8000`; only Caddy is publicly
+reachable. If DNS is not correct yet, Caddy logs a challenge failure and retries
+every minute; it will succeed on its own once the A record propagates.
+
+To add the record at **Vercel DNS** (the nameservers for `softorasystems.com`):
+
+1. Open the Vercel dashboard → **Domains** → `softorasystems.com` → **DNS Records**.
+2. Add: `A` · name `leado` · value `<VM_PUBLIC_IP>` · TTL default.
+3. Wait a few minutes, then run `curl -I https://leado.example.com/`.
 
 ---
 
@@ -165,8 +170,9 @@ Caddy obtains a free Let's Encrypt certificate automatically.
 
 | Symptom | Fix |
 |---|---|
-| URL times out | Allow `80/tcp` in the **Vultr firewall group**, not just `ufw`. |
+| URL times out | Allow `80/tcp` and `443/tcp` in the **Vultr firewall group**, not just `ufw`. |
 | `port is already allocated` | Something else uses 80; run `APP_PORT=8080 ./deploy_vultr.sh`. |
+| HTTPS certificate not issued | Check the A record points at the VM (`dig +short <domain>`), then inspect `docker logs leado-caddy`. Caddy retries automatically. |
 | Login rejected | Read the token from `.env`; the deploy script prints it once. |
 | App exits on start | `docker compose logs` — usually `SOFTORASYSTEMS_TOKEN` is under 16 chars. |
 | Sandbox shows `jailed_process` | The host image `python:3.11-alpine` is still pulling; rerun after a minute. |
@@ -180,5 +186,8 @@ Caddy obtains a free Let's Encrypt certificate automatically.
 - The access token is no longer embedded in the public `ui.html`; enter it at login.
 - The app container mounts the Docker socket to run **Blast Radius Zero** audit
   containers (`--read-only`, `--cap-drop=ALL`, 256 MB / 0.5 CPU / non-root).
-- This setup serves plain HTTP. Add the Caddy step above before sharing real
-  credentials or customer data.
+- With `DOMAIN` set, Caddy terminates TLS and the app is bound to
+  `127.0.0.1:8000`; only ports 80/443 are public.
+- Root SSH password login is disabled (`PermitRootLogin prohibit-password`) on
+  the production VM; use the installed SSH key. Rotate the root password in the
+  Vultr dashboard after provisioning.
