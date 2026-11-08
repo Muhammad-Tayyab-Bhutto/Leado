@@ -47,7 +47,7 @@ jobs:
           VULTR_PORT: ${{ secrets.VULTR_PORT || '22' }}
         run: |
           set -euo pipefail
-          rsync -az --delete \
+          rsync -az --no-owner --no-group --delete \
             --exclude .git \
             --exclude .env \
             --exclude '*.db' \
