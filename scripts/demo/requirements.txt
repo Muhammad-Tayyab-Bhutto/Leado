@@ -1,0 +1,4 @@
+# Only for recording the demo video (scripts/demo/record.sh); the app itself needs ../../requirements.txt
+-r ../../requirements.txt
+piper-tts>=1.2
+websocket-client>=1.7

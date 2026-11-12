@@ -205,9 +205,23 @@ functionality**. For this hackathon we:
 
 Every change is in the git history after commit `884006f`.
 
+## Recording the demo video
+
+The demo video is generated from code: `scripts/demo/storyboard.json` drives a real
+browser through the live PayPal sandbox, then adds offline narration (Piper), captions
+and speed-ups with ffmpeg.
+
+```bash
+pip install -r scripts/demo/requirements.txt     # plus google-chrome and ffmpeg on PATH
+# .env: PayPal sandbox keys, DEMO_PAYPAL_BUYER_EMAIL / _PASSWORD (a sandbox *Personal* account),
+#       DEMO_VOICE=/path/to/en_US-ryan-high.onnx (https://huggingface.co/rhasspy/piper-voices)
+scripts/demo/record.sh                          # -> demo/dealwright-demo.mp4 + .srt
+python scripts/demo/gallery.py                  # -> demo/gallery/*.png (1800x1200)
+```
+
 ## Self-hosting on a VM
 
-`deploy_vultr.sh` and `DEPLOY_VULTR.md` still provide a one-command Docker +
+`deploy_vultr.sh` and [`docs/DEPLOY_VULTR.md`](docs/DEPLOY_VULTR.md) provide a one-command Docker +
 Caddy (automatic HTTPS) deployment on any Ubuntu/Debian VM.
 
 ## License

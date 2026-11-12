@@ -11,7 +11,7 @@ import base64, html, os, shutil, sys, tempfile, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.expanduser("~/.claude/skills/product-demo-video"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dotenv import load_dotenv
 load_dotenv(os.path.join(ROOT, ".env"))
 
@@ -36,7 +36,7 @@ import crm, paypal, paypal_web, ops
 crm.migrate()
 srv = crm.make_server("127.0.0.1", PORT)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
-import demo_recorder as dr
+import recorder as dr
 
 FRAME = """<!doctype html><html><head><meta charset="utf-8"><style>
 *{{box-sizing:border-box;margin:0}}body{{width:1800px;height:1200px;overflow:hidden;font-family:Inter,'DejaVu Sans',system-ui,sans-serif;
