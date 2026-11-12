@@ -1,4 +1,4 @@
-"""Leado-style Proposal Intelligence Engine.
+"""Proposal Intelligence Engine.
 Generates comprehensive Statements of Work (SOW) and commercial proposals
 tailored directly to audited client evidence and technical gaps.
 """
@@ -126,7 +126,7 @@ def generate_proposal(lead_id: int) -> Dict[str, Any]:
     pricing_tiers = [
         {
             "name": "Sprint Remediation",
-            "price": f"${base_low * 2:,} one-time",
+            "price": f"${base_low * 2:,} one-time", "amount": base_low * 2, "interval": "once",
             "highlight": "Essential fix & system hardening",
             "features": [
                 "Immediate resolution of diagnosed bottlenecks",
@@ -136,7 +136,7 @@ def generate_proposal(lead_id: int) -> Dict[str, Any]:
         },
         {
             "name": "Growth Partner (Recommended)",
-            "price": f"${base_high:,}/month",
+            "price": f"${base_high:,}/month", "amount": base_high, "interval": "month",
             "highlight": "Full AI Operations & Continuous Growth",
             "features": [
                 "Complete Phase 1 & Phase 2 execution included",
@@ -147,10 +147,10 @@ def generate_proposal(lead_id: int) -> Dict[str, Any]:
         },
         {
             "name": "Enterprise Autonomous Suite",
-            "price": f"${base_high * 2:,}/month",
+            "price": f"${base_high * 2:,}/month", "amount": base_high * 2, "interval": "month",
             "highlight": "Custom multi-agent workforce",
             "features": [
-                "Custom LLM fine-tuning & private Vultr VM hosting",
+                "Custom LLM fine-tuning & private cloud hosting",
                 "Unlimited workflow automations",
                 "White-glove SLA with 1-hour response time"
             ]

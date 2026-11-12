@@ -173,7 +173,7 @@ except Exception:
 for k in os.environ:
     # Only app-issued credentials count. Base images ship benign vars such
     # as GPG_KEY, which are not host secrets.
-    if k.upper().startswith(("SOFTORA", "VULTR", "OPENROUTER", "SERPAPI", "HUNTER",
+    if k.upper().startswith(("SOFTORA", "PAYPAL", "ANTHROPIC", "VULTR", "OPENROUTER", "SERPAPI", "HUNTER",
                              "CAPSOLVER", "TWOCAPTCHA", "ANTICAPTCHA", "SMTP_")):
         attempt_results["access_env_secrets"] = True
 

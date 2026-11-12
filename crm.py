@@ -1,5 +1,5 @@
 """CRM API + UI layer over app.py (reuses its schema, scoring, drafting, compliance). Single-tenant, token-authenticated."""
-import errno, hmac, json, os, re, smtplib, sys, urllib.parse
+import errno, hmac, json, os, re, smtplib, sys, threading, urllib.parse
 from datetime import date, timedelta
 from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -10,7 +10,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import app, agent, sandbox, proposal_engine, copilot, workforce, growth
+import app, agent, sandbox, proposal_engine, copilot, workforce, growth, paypal, paypal_web
 from app import conn, STATUSES, SERVICES, now
 
 TOKEN = os.environ.get("SOFTORASYSTEMS_TOKEN", "")
@@ -37,6 +37,7 @@ def migrate():
     proposal_engine.init_proposals()
     workforce.ensure()
     growth.ensure()
+    paypal.ensure()
 
 def g(q, k): return (q.get(k) or [""])[0].strip()
 def log(c, i, kind, detail=""): c.execute("insert into events(lead_id,kind,detail,at) values(?,?,?,?)", (i, kind, str(detail)[:500], now()))
@@ -228,16 +229,17 @@ def send_email(q, b, i):
         l = get_lead(c, e["lead_id"])
         sent0 = c.execute("select approach from emails where lead_id=? and step=0 and status='sent'", (l["id"],)).fetchall()
     if e["status"] != "approved": raise ValueError("email must be approved first")
-    if e["step"] == 0 and sent0: raise ValueError("an initial email was already sent to this lead")
-    if e["step"] > 0 and not sent0: raise ValueError("send the initial email first")
+    reminder = e["approach"] == "PAYPAL_REMINDER"  # collections email to an existing client, not cold outreach
+    if not reminder and e["step"] == 0 and sent0: raise ValueError("an initial email was already sent to this lead")
+    if not reminder and e["step"] > 0 and not sent0: raise ValueError("send the initial email first")
     if e["due_date"] and e["due_date"] > date.today().isoformat(): raise ValueError(f"follow-up not due until {e['due_date']}")
     errs = app.can_send(l["id"], bool(ADDRESS) and PH not in e["body"])
     if errs: raise ValueError("; ".join(errs))
     if b.get("manual") is not True: smtp_send(l["contact_email"], e["subject"], e["body"])
     with conn() as c:
         c.execute("update emails set status='sent', sent_at=? where id=?", (now(), i))
-        c.execute("update leads set status=? where id=?", ("CONTACTED" if e["step"] == 0 else "FOLLOW_UP", l["id"]))
-        if e["step"] == 0:
+        if not reminder: c.execute("update leads set status=? where id=?", ("CONTACTED" if e["step"] == 0 else "FOLLOW_UP", l["id"]))
+        if e["step"] == 0 and not reminder:
             for n, d in zip((1, 2, 3), app.FOLLOWUP_DAYS[1:]):
                 c.execute("update emails set due_date=? where lead_id=? and step=?", (add_bdays(date.today(), d).isoformat(), l["id"], n))
         log(c, l["id"], "email_sent", f"{e['approach']} step {e['step']} ({'manual' if b.get('manual') else 'smtp'})")
@@ -290,7 +292,7 @@ def export(q, b):
 R.append(("GET", re.compile("^/export.csv$"), export))
 
 # ============================================================================
-# Leado PROPOSALS, BLAST RADIUS SANDBOX & VIO COPILOT ROUTES
+# Dealwright PROPOSALS, BLAST RADIUS SANDBOX & WREN COPILOT ROUTES
 # ============================================================================
 
 @route("GET", "/api/proposals")
@@ -302,6 +304,53 @@ def lead_proposal_get(q, b, i):
     p = proposal_engine.get_proposal(i)
     if not p: return {"error": "No proposal generated yet"}
     return p
+
+# ============================================================================
+# PAYPAL QUOTE-TO-CASH ROUTES (authenticated)
+# ============================================================================
+
+_REQ = threading.local()
+
+def base_url(h=None):
+    if os.environ.get("PUBLIC_BASE_URL"): return os.environ["PUBLIC_BASE_URL"].rstrip("/")
+    if h is None: return f"http://localhost:{PORT}"
+    proto = (h.headers.get("X-Forwarded-Proto") or "http").split(",")[0].strip()
+    host = h.headers.get("X-Forwarded-Host") or h.headers.get("Host") or f"localhost:{PORT}"
+    return f"{proto}://{host}"
+
+@route("GET", "/api/paypal/status")
+def paypal_status(q, b): return paypal.status()
+
+@route("GET", "/api/payments")
+def payments_list(q, b): return {"items": paypal.list_payments(), "summary": {k: v for k, v in paypal.summary().items() if k != "outstanding"}}
+
+@route("POST", "/api/proposals/(\\d+)/paylink")
+def proposal_paylink(q, b, i): return paypal.pay_link(i, getattr(_REQ, "base", None) or base_url())
+
+@route("POST", "/api/leads/(\\d+)/invoice")
+def lead_invoice(q, b, i):
+    if b.get("confirm") is not True: raise ValueError("explicit confirmation required")
+    return paypal.send_invoice(i, int(b.get("tier", 0)))
+
+@route("POST", "/api/payments/(\\d+)/refund")
+def payment_refund(q, b, i):
+    if b.get("confirm") is not True: raise ValueError("explicit confirmation required")
+    return paypal.refund(i, str(b.get("reason", ""))[:200])
+
+@route("POST", "/api/payments/(\\d+)/sync")
+def payment_sync(q, b, i): return paypal.sync(i)
+
+@route("POST", "/api/payments/(\\d+)/remind")
+def payment_remind(q, b, i):
+    with conn() as c:
+        r = c.execute("select proposal_id from payments where id=?", (i,)).fetchone()
+    url = None
+    if r and r[0]:
+        try: url = paypal.pay_link(r[0], getattr(_REQ, "base", None) or base_url())["url"]
+        except LookupError: pass
+    with conn() as c:
+        k = c.execute("select kind from payments where id=?", (i,)).fetchone()
+    return paypal.draft_reminder(i, None if (k and k[0] == "invoice") else url)
 
 @route("POST", "/api/leads/(\\d+)/proposal")
 def lead_proposal_gen(q, b, i):
@@ -399,7 +448,7 @@ class H(BaseHTTPRequestHandler):
         raw = body.encode() if isinstance(body, str) and ct != "application/json" else (json.dumps(body) if not isinstance(body, str) else body).encode()
         self.send_response(code); self.send_header("Content-Type", ct + "; charset=utf-8"); self.send_header("Content-Length", str(len(raw)))
         self.send_header("X-Content-Type-Options", "nosniff"); self.send_header("Cache-Control", "no-store")
-        if ct == "text/html": self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; frame-ancestors 'none'")
+        if ct == "text/html": self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; frame-ancestors 'none'")
         self.end_headers(); self.wfile.write(raw)
     def _handle(self, m):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
@@ -407,12 +456,14 @@ class H(BaseHTTPRequestHandler):
             ui_content = (Path(__file__).parent / "ui.html").read_text(encoding="utf-8")
             return self._out(200, ui_content, "text/html")
         if m == "GET" and u.path == "/favicon.ico": return self._out(204, "", "image/x-icon")
+        if u.path.startswith("/pay/") or u.path == "/api/paypal/webhook": return self._public(m, u, q)
         if not hmac.compare_digest(self.headers.get("Authorization", "").encode(), ("Bearer " + TOKEN).encode()): return self._out(401, {"error": "unauthorized"})
         try:
             n = int(self.headers.get("Content-Length") or 0)
             if n > 100_000: raise ValueError("request too large")
             body = json.loads(self.rfile.read(n) or b"{}") if m != "GET" else {}
             if not isinstance(body, dict): raise ValueError("JSON object expected")
+            _REQ.base = base_url(self)
             for rm, pat, f in R:
                 mo = pat.match(u.path)
                 if rm == m and mo:
@@ -424,6 +475,35 @@ class H(BaseHTTPRequestHandler):
         except NotImplementedError as ex: self._out(501, {"error": str(ex)})
         except RuntimeError as ex: self._out(502, {"error": str(ex)})
         except Exception as ex: print("ERROR", type(ex).__name__, ex, file=sys.stderr); self._out(500, {"error": "internal error"})
+    def _redirect(self, url):
+        self.send_response(303); self.send_header("Location", url); self.send_header("Cache-Control", "no-store"); self.end_headers()
+    def _public(self, m, u, q):
+        """Unauthenticated surface: token-scoped client payment pages + PayPal webhooks."""
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            if n > 100_000: raise ValueError("request too large")
+            raw = self.rfile.read(n) if n else b""
+            if u.path == "/api/paypal/webhook":
+                if m != "POST": return self._out(405, {"error": "POST only"})
+                try: return self._out(200, paypal.handle_webhook(dict(self.headers), json.loads(raw or b"{}")))
+                except PermissionError as ex: return self._out(400, {"error": str(ex)})
+            mo = re.match(r"^/pay/([A-Za-z0-9_-]{16,64})(/checkout|/return)?$", u.path)
+            if not mo: return self._out(404, paypal_web.page("Not found", paypal_web.notice(False, "This payment link is not valid.")), "text/html")
+            tok, sub = mo.group(1), mo.group(2) or ""
+            try:
+                if m == "GET" and sub == "": return self._out(200, paypal_web.proposal_page(tok), "text/html")
+                if m == "POST" and sub == "/checkout":
+                    form = urllib.parse.parse_qs(raw.decode("utf-8", "replace"))
+                    return self._redirect(paypal.start_checkout(tok, int((form.get("tier") or ["0"])[0]), base_url(self)))
+                if m == "GET" and sub == "/return": return self._out(200, paypal_web.thanks(tok, paypal.complete_return(tok, q)), "text/html")
+            except LookupError as ex:
+                return self._out(404, paypal_web.page("Not found", paypal_web.notice(False, str(ex))), "text/html")
+            except (ValueError, RuntimeError, NotImplementedError) as ex:
+                print("PAYPAL", type(ex).__name__, ex, file=sys.stderr)
+                return self._out(502, paypal_web.proposal_page(tok, paypal_web.notice(False, f"Payment could not be completed: {ex}")), "text/html")
+            self._out(405, {"error": "method not allowed"})
+        except Exception as ex:
+            print("ERROR", type(ex).__name__, ex, file=sys.stderr); self._out(500, {"error": "internal error"})
     do_GET = lambda s: s._handle("GET")
     do_POST = lambda s: s._handle("POST")
     do_PATCH = lambda s: s._handle("PATCH")
@@ -451,12 +531,12 @@ def serve(host=None, port=None):
     migrate()
     srv = make_server(host, port)
     actual = srv.server_address[1]
-    print(f"Softora CRM: http://{host}:{actual}")
+    print(f"Dealwright: http://{host}:{actual}")
     if actual != port: print(f"(requested port {port} was busy, using {actual})", file=sys.stderr)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
-        print("\nSoftora CRM stopped.")
+        print("\nDealwright stopped.")
     finally:
         srv.server_close()
 
