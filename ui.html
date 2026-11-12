@@ -273,6 +273,8 @@
       border-color: var(--bad)
     }
 
+    .card.dc b { font-size: 15px; display: inline; line-height: 1.35 }
+    .card.dc .bd b { font-size: 12px }
     details.card > summary { list-style: none; cursor: pointer; display: block }
     details.card > summary::-webkit-details-marker { display: none }
     details.card[open] > summary { margin-bottom: 4px }
@@ -1186,6 +1188,11 @@
         <rect x="2" y="5" width="20" height="14" rx="2" />
         <line x1="2" y1="10" x2="22" y2="10" />
       </svg>PayPal Payments</button>
+    <button class="nav" data-act="view" data-v="org"><svg class="ic" viewBox="0 0 24 24">
+        <rect x="9" y="2" width="6" height="5" rx="1" /><rect x="2" y="16" width="6" height="5" rx="1" />
+        <rect x="9" y="16" width="6" height="5" rx="1" /><rect x="16" y="16" width="6" height="5" rx="1" />
+        <path d="M12 7v5M5 16v-4h14v4" />
+      </svg>Company</button>
     <button class="nav" data-act="view" data-v="ops"><svg class="ic" viewBox="0 0 24 24">
         <circle cx="9" cy="8" r="3" />
         <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
@@ -1281,7 +1288,7 @@
     const opts = (a, sel, all) => `<option value="">${all}</option>` + a.map(v => `<option ${v === sel ? 'selected' : ''} value="${esc(v)}">${nice(v)}</option>`).join('');
 
     function bar() {
-      if (['approvals', 'lead_finder', 'proposals', 'payments', 'ops', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
+      if (['approvals', 'lead_finder', 'proposals', 'payments', 'ops', 'org', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
       $('#bar').innerHTML = `<input id="q" placeholder="Search company, domain, contact" value="${esc(F.q)}" style="width:230px">
   <select data-f="country">${opts(FAC.country, F.country, 'All countries')}</select><select data-f="industry">${opts(FAC.industry, F.industry, 'All industries')}</select>
   <select data-f="service">${opts(FAC.service, F.service, 'All services')}</select><select data-f="status">${opts(ST, F.status, 'All statuses')}</select>
@@ -1314,6 +1321,7 @@
       if (V === 'proposals') { proposalsRefresh(); return }
       if (V === 'payments') { paymentsRefresh(); return }
       if (V === 'ops') { opsRefresh(); return }
+      if (V === 'org') { orgRefresh(); return }
       if (V === 'sandbox') { sandboxRefresh(); return }
       if (V === 'copilot') { copilotRefresh(); return }
       if (V === 'voice') { voiceRefresh(); return }
@@ -1421,11 +1429,12 @@
     const PRI = { urgent: 'gf', high: 'gd', normal: 'gb', low: 'ga' };
     const PCOLS = [['queued', 'Queued'], ['in_progress', 'In progress'], ['review', 'Review'], ['done', 'Done']];
     const NEXT = { queued: [['in_progress', 'Start ▶']], in_progress: [['review', 'Send to review'], ['queued', '↩ Queue']], review: [['done', 'Mark done ✓'], ['in_progress', '↩ Rework']], done: [], on_hold: [['queued', 'Resume']] };
-    let OPS = { team: [], projects: [] };
+    let OPS = { team: [], projects: [] }, DEPT_NAME = {};
     async function opsRefresh() {
       $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Team & Projects'; $('#content').innerHTML = skel();
       try {
-        const [t, p] = await Promise.all([api('/api/team'), api('/api/projects')]);
+        const [t, p, o] = await Promise.all([api('/api/team'), api('/api/projects'), api('/api/org')]);
+        DEPT_NAME = Object.fromEntries(o.departments.map(d => [d.id, d.name]));
         OPS = { team: t.items, projects: p.items }; const s = p.summary;
         $('#stats').innerHTML = [['Free', s.free], ['Busy', s.busy], ['At capacity', s.at_capacity], ['Away', s.away],
           ['Queued', `${s.queued}<span class="m" style="font-size:12px"> · ${s.unassigned_queued} unassigned</span>`],
@@ -1436,14 +1445,15 @@
             <div style="display:flex;justify-content:space-between;gap:6px"><b>${esc(p.name)}</b><span class="bd ${PRI[p.priority]}">${esc(p.priority)}</span></div>
             <div class="m">${esc(p.company || 'Internal')}${p.value ? ' · ' + money(p.value) : ''}${p.due ? ` · <span style="${p.overdue ? 'color:var(--bad);font-weight:700' : ''}">due ${esc(p.due)}${p.overdue ? ' ⚠' : ''}</span>` : ''}</div>
             ${p.skills_list.length ? `<div class="m" style="margin-top:4px">${p.skills_list.map(esc).join(' · ')}</div>` : ''}
+            ${p.tasks_total ? `<div class="m" style="margin-top:6px">Lifecycle ${p.tasks_done}/${p.tasks_total} approved${p.tasks_review ? ` · <b style="color:var(--warn)">${p.tasks_review} awaiting approval</b>` : ''}</div>` : ''}
             <select data-assign="${p.id}" style="margin-top:8px;width:100%" ${p.status === 'done' ? 'disabled' : ''}>${opts(p.assignee_id)}</select>
-            <div class="bt" style="margin-top:6px">${(NEXT[p.status] || []).map(([st, l]) => `<button data-act="ops_move" data-id="${p.id}" data-st="${st}">${l}</button>`).join('')}</div>
+            <div class="bt" style="margin-top:6px"><button class="accent" data-act="proj_open" data-id="${p.id}">Open lifecycle ▸</button>${(NEXT[p.status] || []).map(([st, l]) => `<button data-act="ops_move" data-id="${p.id}" data-st="${st}">${l}</button>`).join('')}</div>
           </div>`;
         const board = PCOLS.map(([st, label]) => { const L = OPS.projects.filter(p => p.status === st || (st === 'queued' && p.status === 'on_hold'));
           return `<div class="col" style="flex:1 1 0;min-width:230px"><h4><span>${label}</span><span>${L.length}</span></h4>${L.map(card).join('') || '<span class="m">Nothing here</span>'}</div>` }).join('');
         const rows = OPS.team.map(m => `<tr>
             <td><b>${esc(m.name)}</b> ${m.kind === 'ai_agent' ? '<span class="bd gc">AI agent</span>' : ''}<div class="m">${esc(m.email || '')}</div></td>
-            <td>${esc(m.role || '')}<div class="m">${m.skills_list.map(esc).join(', ')}</div></td>
+            <td>${esc(m.role || '')}${m.department ? ` <span class="bd ga">${esc(DEPT_NAME[m.department] || m.department)}</span>` : ''}<div class="m">${m.skills_list.map(esc).join(', ')}</div></td>
             <td><span class="bd ${AV[m.availability][0]}">${AV[m.availability][1]}</span></td>
             <td>${m.working_on.length ? m.working_on.map(w => `<div><b>${esc(w.name)}</b> <span class="m">${esc(w.status.replace('_', ' '))}</span></div>`).join('') : '<span class="m">—</span>'}${m.queued_projects ? `<div class="m">+${m.queued_projects} queued</div>` : ''}</td>
             <td>${m.active_projects}/${m.capacity_projects}</td>
@@ -1475,6 +1485,7 @@
               <div><label>Name</label><input id="nm_name" placeholder="Ayesha Malik"></div>
               <div><label>Type</label><select id="nm_kind"><option value="human">Employee</option><option value="ai_agent">AI agent</option></select></div>
               <div><label>Role</label><input id="nm_role" placeholder="Senior Flutter Developer"></div>
+              <div><label>Department</label><select id="nm_dept"><option value="">—</option>${Object.entries(DEPT_NAME).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></div>
               <div><label>Skills</label><input id="nm_skills" placeholder="mobile, flutter, firebase"></div>
               <div><label>Email</label><input id="nm_email" placeholder="optional"></div>
               <div><label>Project capacity</label><input id="nm_cap" type="number" min="1" max="50" placeholder="2 for people, 5 for agents"></div>
@@ -1482,6 +1493,67 @@
             <div class="bt"><button class="pri" data-act="ops_add_member">Add member</button></div>
           </details>`;
       } catch (e) { $('#content').innerHTML = empty('Could not load team & projects', esc(e.message)) }
+    }
+
+    // ---- Company (departments) ----
+    let ORG = null;
+    async function orgRefresh() {
+      $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Company'; $('#content').innerHTML = skel();
+      try {
+        const o = ORG = await api('/api/org'), D = o.departments;
+        const staffed = D.filter(d => d.people || d.agents).length;
+        $('#stats').innerHTML = [['Departments', D.length], ['Staffed', `${staffed}/${D.length}`], ['People', D.reduce((a, d) => a + d.people, 0)],
+          ['AI agents', D.reduce((a, d) => a + d.agents, 0)], ['Lifecycle stages', o.lifecycle.length]]
+          .map(([l, v]) => `<div class="card"><span class="m">${l}</span><b>${v}</b></div>`).join('');
+        const chip = (t, cls = 'gb') => `<span class="bd ${cls}" style="margin:0 4px 4px 0;display:inline-block">${t}</span>`;
+        const card = d => `<div class="card dc" style="padding:12px">
+            <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(d.name)}</b>
+              <span class="m" style="white-space:nowrap">${d.people ? d.people + ' 👤' : ''} ${d.agents ? d.agents + ' 🤖' : ''}${!d.people && !d.agents ? '<span style="color:var(--warn)">unstaffed</span>' : ''}</span></div>
+            <div class="m" style="margin:4px 0 6px">${esc(d.focus)}</div>
+            ${d.staff.length ? `<div style="font-size:12px;margin-bottom:6px">${d.staff.map(esc).join(' · ')}</div>` : ''}
+            <div>${d.kpis.map(k => chip(`${esc(k.label)}: <b>${esc(String(k.value))}</b>`, 'ga')).join('')}${d.in_lifecycle ? chip('client lifecycle', 'gc') : ''}</div>
+            <details style="margin-top:4px"><summary class="m" style="cursor:pointer">Roles</summary><div class="m">${esc(d.roles)}</div></details>
+          </div>`;
+        const pillars = Object.entries(o.pillars).map(([pid, name]) => {
+          const L = D.filter(d => d.pillar === pid); if (!L.length) return '';
+          return `<h3 style="margin:16px 0 8px">${esc(name)} <span class="m">(${L.length})</span></h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px">${L.map(card).join('')}</div>` }).join('');
+        $('#content').innerHTML = `
+          <div class="bt" style="margin:0 0 10px">
+            ${o.unstaffed.length ? `<button class="accent" data-act="org_staff">🤖 Staff ${o.unstaffed.length} empty department${o.unstaffed.length === 1 ? '' : 's'} with AI agents</button>`
+              : `<button disabled>✓ All ${D.length} departments staffed</button>`}
+            <span class="m">Add real people from Team &amp; Projects; AI agents cover the gaps.</span>
+          </div>
+          <div class="card dc" style="padding:12px"><b>Client-to-delivery lifecycle</b> <span class="m">· after PayPal confirms payment, the PM agent routes each stage to its department</span>
+            <div style="margin-top:8px">${o.lifecycle.map((s, i) => chip(`${i + 1}. ${esc(s.title)} <span style="opacity:.7">· ${esc((D.find(d => d.id === s.department) || {}).name || s.department)}</span>`, 'gb')).join(' ')}</div></div>
+          ${pillars}`;
+      } catch (e) { $('#content').innerHTML = empty('Could not load the company', esc(e.message)) }
+    }
+    const TST = { todo: ['ga', 'To do'], running: ['gb', 'Agent working…'], review: ['gd', 'Awaiting approval'], done: ['ge', 'Approved'], blocked: ['gf', 'Blocked'] };
+    async function openProject(pid) {
+      const Dw = $('#drawer'); Dw.hidden = false; Dw.innerHTML = skel();
+      try {
+        const [p, t] = await Promise.all([api(`/api/projects/${pid}`), api(`/api/projects/${pid}/tasks`)]);
+        const runnable = t.items.filter(x => x.assignee_kind === 'ai_agent' && ['todo', 'blocked'].includes(x.status)).length;
+        Dw.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><h1 style="margin:0">${esc(p.name)}</h1><span class="m">${esc(p.company || 'Internal')} · ${esc(p.status.replace('_', ' '))} · owner ${esc(p.assignee_name || 'unassigned')}${p.value ? ' · ' + money(p.value) : ''}</span></div>
+            <button data-act="close">✕</button></div>
+          <div class="bt" style="margin:12px 0">
+            <button class="accent" data-act="proj_run_all" data-id="${p.id}" ${runnable ? '' : 'disabled'}>▶ Run ${runnable} AI agent${runnable === 1 ? '' : 's'}</button>
+            ${t.items.length ? '' : `<button data-act="proj_plan" data-id="${p.id}">Plan lifecycle</button>`}
+            <span class="m">${t.items.filter(x => x.status === 'done').length}/${t.items.length} approved · agents write deliverables; you approve them</span>
+          </div>
+          ${t.items.map(x => `<div class="card dc" style="padding:12px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+                <div><b>${x.seq}. ${esc(x.title)}</b><div class="m">${esc(x.department_name)} · ${esc(x.assignee_name || 'unstaffed')}${x.assignee_kind === 'ai_agent' ? ' 🤖' : ''}</div></div>
+                <span class="bd ${TST[x.status][0]}">${TST[x.status][1]}</span></div>
+              ${x.output ? `<div class="pv" style="margin-top:8px;white-space:normal;line-height:1.5">${md(x.output)}<div class="m" style="margin-top:6px">${x.output_source === 'ai' ? '✍️ written by the AI agent' : '📄 template'}</div></div>` : ''}
+              <div class="bt" style="margin-top:6px">
+                ${x.assignee_kind === 'ai_agent' && ['todo', 'blocked'].includes(x.status) ? `<button data-act="task_run" data-id="${x.id}" data-pid="${p.id}">Run agent</button>` : ''}
+                ${x.status === 'review' ? `<button class="pri" data-act="task_done" data-id="${x.id}" data-pid="${p.id}">✓ Approve</button>` : ''}
+                ${x.status === 'todo' && x.assignee_kind !== 'ai_agent' && x.assignee_id ? `<button data-act="task_done" data-id="${x.id}" data-pid="${p.id}">Mark done</button>` : ''}
+              </div></div>`).join('')}`;
+      } catch (e) { toast(e.message, 1) }
     }
 
     async function proposalsRefresh() {
@@ -2039,11 +2111,26 @@
         } catch (e) { toast(e.message, 1) }
       },
 
+      // ---- COMPANY & LIFECYCLE ACTIONS ----
+      async org_staff() {
+        try { const r = await api('/api/org/staff-ai', { method: 'POST', body: {} }); toast(`${r.created.length} AI agents joined the company`); orgRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      proj_open(t) { openProject(t.dataset.id) },
+      async proj_plan(t) { try { await api(`/api/projects/${t.dataset.id}/plan`, { method: 'POST', body: {} }); openProject(t.dataset.id) } catch (e) { toast(e.message, 1) } },
+      async proj_run_all(t) {
+        t.disabled = true; t.textContent = '⏳ Department agents are working…';
+        document.querySelectorAll('#drawer .bd.ga').forEach(b => { if (b.textContent === 'To do') { b.className = 'bd gb'; b.textContent = 'Agent working…' } });
+        try { const r = await api(`/api/projects/${t.dataset.id}/run-agents`, { method: 'POST', body: {} }); toast(`${r.ran} deliverables ready for your approval`) } catch (e) { toast(e.message, 1) }
+        openProject(t.dataset.id); if (V === 'ops') opsRefresh();
+      },
+      async task_run(t) { t.disabled = true; t.textContent = '⏳ Working…'; try { await api(`/api/tasks/${t.dataset.id}/run`, { method: 'POST', body: {} }) } catch (e) { toast(e.message, 1) } openProject(t.dataset.pid) },
+      async task_done(t) { try { await api(`/api/tasks/${t.dataset.id}`, { method: 'PATCH', body: { status: 'done' } }); openProject(t.dataset.pid); if (V === 'ops') opsRefresh() } catch (e) { toast(e.message, 1) } },
+
       // ---- TEAM & PROJECTS ACTIONS ----
       async ops_add_member() {
         const v = id => $('#' + id).value.trim(), cap = v('nm_cap');
         try {
-          const m = await api('/api/team', { method: 'POST', body: { name: v('nm_name'), kind: v('nm_kind'), role: v('nm_role'), skills: v('nm_skills'), email: v('nm_email'), ...(cap ? { capacity: +cap } : {}) } });
+          const m = await api('/api/team', { method: 'POST', body: { name: v('nm_name'), kind: v('nm_kind'), role: v('nm_role'), department: v('nm_dept') || null, skills: v('nm_skills'), email: v('nm_email'), ...(cap ? { capacity: +cap } : {}) } });
           toast(`${m.name} added as ${m.kind === 'ai_agent' ? 'an AI agent' : 'an employee'}`); opsRefresh();
         } catch (e) { toast(e.message, 1) }
       },
