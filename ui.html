@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Leado 2.0 × Vultr | Autonomous Sales Ops & Sandboxed Agent</title>
+  <title>Dealwright | AI Quote-to-Cash on PayPal</title>
   <style>
     :root {
       --bg: #070b14;
@@ -273,6 +273,10 @@
       border-color: var(--bad)
     }
 
+    #paygrid button { padding: 4px 10px; font-size: 12px; line-height: 1.2; margin: 0 2px 0 0; min-height: 0; vertical-align: middle }
+    #paygrid .bd { padding: 2px 9px; line-height: 1.5; display: inline-block; vertical-align: middle }
+    #paygrid .ag-cell { display: flex; align-items: center }
+    .chat-msg code { background: rgba(148,163,184,.15); padding: 1px 5px; border-radius: 4px; font-size: 12px }
     .tw {
       overflow-x: auto;
       border: 1px solid var(--b);
@@ -1151,8 +1155,8 @@
 
 <body>
   <aside class="side">
-    <div class="logo"><i></i><span>Leado 2.0 <span
-          style="font-size:10px;color:#60a5fa;display:block;font-weight:600">Vultr Agent Rush</span></span></div>
+    <div class="logo"><i></i><span>Dealwright <span
+          style="font-size:10px;color:#60a5fa;display:block;font-weight:600">AI × PayPal</span></span></div>
 
     <div class="nav-section">Pipeline & CRM</div>
     <button class="nav on" data-act="view" data-v="table"><svg class="ic" viewBox="0 0 24 24">
@@ -1167,7 +1171,7 @@
         <path d="M4 6h16v12H4zM4 7l8 6 8-6" />
       </svg>Email Approvals</button>
 
-    <div class="nav-section">Leado Intelligence</div>
+    <div class="nav-section">Dealwright Intelligence</div>
     <button class="nav" data-act="view" data-v="proposals"><svg class="ic" viewBox="0 0 24 24">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
@@ -1175,11 +1179,15 @@
         <line x1="16" y1="17" x2="8" y2="17" />
         <polyline points="10 9 9 9 8 9" />
       </svg>Proposals & SOW</button>
+    <button class="nav" data-act="view" data-v="payments"><svg class="ic" viewBox="0 0 24 24">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>PayPal Payments</button>
     <button class="nav" data-act="view" data-v="copilot"><svg class="ic" viewBox="0 0 24 24">
         <path
           d="M12 2a8 8 0 0 0-8 8c0 3 2 5.5 5 7.2V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2.8c3-1.7 5-4.2 5-7.2a8 8 0 0 0-8-8z" />
         <line x1="9" y1="13" x2="15" y2="13" />
-      </svg>Vio AI Copilot</button>
+      </svg>Wren AI Copilot</button>
     <button class="nav" data-act="view" data-v="voice"><svg class="ic" viewBox="0 0 24 24">
         <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" />
         <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
@@ -1215,7 +1223,7 @@
   <div class="main">
     <div class="header">
       <h1 id="title">Pipeline</h1>
-      <div class="badge-vultr"><i></i><span>Vultr Serverless Inference</span></div>
+      <div class="badge-vultr"><i></i><span>PayPal Sandbox · AI Agent</span></div>
     </div>
     <div class="cards" id="stats"></div>
     <div class="bar" id="bar"></div>
@@ -1227,7 +1235,7 @@
   <div id="toast"></div>
   <div id="login" class="login" hidden>
     <form id="lf">
-      <div class="logo" style="padding:0"><i></i><b>Leado 2.0 × Vultr</b></div>
+      <div class="logo" style="padding:0"><i></i><b>Dealwright × PayPal</b></div>
       <span class="m">Enter access token</span>
       <input id="tok" type="password" value="" placeholder="Access token" autocomplete="current-password" required>
       <button class="pri">Launch Platform</button>
@@ -1240,7 +1248,7 @@
     });
     const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const ST = ["NEW", "RESEARCHED", "QUALIFIED", "EMAIL_DRAFTED", "APPROVED", "CONTACTED", "FOLLOW_UP", "REPLIED", "MEETING", "PROPOSAL", "WON", "LOST", "OPTED_OUT"];
-    const GRP = { NEW: 'a', RESEARCHED: 'a', QUALIFIED: 'a', EMAIL_DRAFTED: 'b', APPROVED: 'b', CONTACTED: 'c', FOLLOW_UP: 'c', REPLIED: 'c', MEETING: 'd', PROPOSAL: 'd', WON: 'e', LOST: 'f', OPTED_OUT: 'f', draft: 'a', approved: 'b', sent: 'e', rejected: 'f' };
+    const GRP = { NEW: 'a', RESEARCHED: 'a', QUALIFIED: 'a', EMAIL_DRAFTED: 'b', APPROVED: 'b', CONTACTED: 'c', FOLLOW_UP: 'c', REPLIED: 'c', MEETING: 'd', PROPOSAL: 'd', WON: 'e', LOST: 'f', OPTED_OUT: 'f', draft: 'a', approved: 'b', sent: 'e', rejected: 'f', paid: 'e', invoiced: 'd' };
     const band = n => n >= 90 ? 's4' : n >= 75 ? 's3' : n >= 60 ? 's2' : n >= 40 ? 's1' : 's0', badge = s => `<span class="bd g${GRP[s] || 'a'}">${esc(String(s).replace('_', ' '))}</span>`, pill = n => `<span class="sc ${band(n)}">${n}</span>`;
     const money = n => '$' + Number(n || 0).toLocaleString(), nice = s => esc((s || '—').replace(/_/g, ' '));
     const CARDS = [['Total Leads', 'discovered'], ['Qualified (60+)', 'qualified'], ['High Priority (75+)', 'high'], ['Drafts Awaiting Approval', 'ready'], ['Emails Sent', 'sent'], ['Positive Replies', 'positive'], ['Meetings Booked', 'meetings'], ['Won Deals', 'won'], ['Closed MRR', 'mrr', 1], ['Weighted Pipeline Value', 'pipeline_mrr', 1]];
@@ -1264,7 +1272,7 @@
     const opts = (a, sel, all) => `<option value="">${all}</option>` + a.map(v => `<option ${v === sel ? 'selected' : ''} value="${esc(v)}">${nice(v)}</option>`).join('');
 
     function bar() {
-      if (['approvals', 'lead_finder', 'proposals', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
+      if (['approvals', 'lead_finder', 'proposals', 'payments', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
       $('#bar').innerHTML = `<input id="q" placeholder="Search company, domain, contact" value="${esc(F.q)}" style="width:230px">
   <select data-f="country">${opts(FAC.country, F.country, 'All countries')}</select><select data-f="industry">${opts(FAC.industry, F.industry, 'All industries')}</select>
   <select data-f="service">${opts(FAC.service, F.service, 'All services')}</select><select data-f="status">${opts(ST, F.status, 'All statuses')}</select>
@@ -1295,6 +1303,7 @@
       if (V === 'lead_finder') { LFRefresh(); return }
       if (V === 'bulk') { bulkRefresh(); return }
       if (V === 'proposals') { proposalsRefresh(); return }
+      if (V === 'payments') { paymentsRefresh(); return }
       if (V === 'sandbox') { sandboxRefresh(); return }
       if (V === 'copilot') { copilotRefresh(); return }
       if (V === 'voice') { voiceRefresh(); return }
@@ -1316,12 +1325,93 @@
     }
 
     // ---- PROPOSALS VIEW ----
+    const PST = { created: 'gd', sent: 'gd', completed: 'ge', active: 'ge', paid: 'ge', refunded: 'gc', cancelled: 'gf', failed: 'gf' };
+    const VA = [];
+    // Minimal, safe markdown for copilot replies: escape first, then **bold**, _italic_, `code`, newlines.
+    const md = t => esc(String(t || '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|\s)_(.+?)_(?=\s|$)/g, '$1<i>$2</i>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*([^*\n]+)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
+    // ---- AG Grid Community ledger (falls back to the plain table if the CDN is unreachable) ----
+    let AGP = null;
+    function loadAgGrid() {
+      if (window.agGrid) return Promise.resolve(true);
+      if (!AGP) AGP = new Promise(res => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/ag-grid-community@33.0.0/dist/ag-grid-community.min.js';
+        s.onload = () => res(!!window.agGrid); s.onerror = () => { AGP = null; res(false) };
+        setTimeout(() => res(!!window.agGrid), 4000);
+        document.head.append(s);
+      });
+      return AGP;
+    }
+    function payActions(p) {
+      const open = ['created', 'sent'].includes(p.status), done = ['completed', 'paid', 'active'].includes(p.status);
+      return `<button data-act="pay_sync" data-id="${p.id}">Sync</button>` +
+        (open ? ` <button class="accent" data-act="pay_remind" data-id="${p.id}">AI reminder</button>` : '') +
+        (done ? ` <button data-act="pay_refund" data-id="${p.id}" data-kind="${esc(p.kind)}" data-amt="${p.amount}" data-co="${esc(p.company)}">${p.kind === 'subscription' ? 'Cancel' : 'Refund'}</button>` : '');
+    }
+    function renderPayGrid(items) {
+      const el = $('#paygrid'); if (!el) return;
+      const theme = agGrid.themeQuartz.withPart(agGrid.colorSchemeDarkBlue).withParams({ backgroundColor: '#0d1324', headerBackgroundColor: '#12182c', borderColor: '#1b2542', fontSize: 13 });
+      agGrid.createGrid(el, {
+        theme, rowData: items, rowHeight: 44, animateRows: true, pagination: items.length > 15, paginationPageSize: 15,
+        defaultColDef: { sortable: true, filter: true, resizable: true, floatingFilter: true },
+        columnDefs: [
+          { field: 'company', headerName: 'Company', flex: 1.4, minWidth: 165, tooltipField: 'company', cellRenderer: x => `<b>${esc(x.value)}</b>` },
+          { field: 'tier_name', headerName: 'Item', flex: 1.2, minWidth: 140, tooltipField: 'tier_name', valueFormatter: x => (x.value || '').replace(' (Recommended)', '') },
+          { field: 'kind', headerName: 'Type', width: 110 },
+          { field: 'amount', headerName: 'Amount', width: 115, filter: 'agNumberColumnFilter', valueFormatter: x => money(x.value) + (x.data.interval === 'month' ? '/mo' : '') },
+          { field: 'status', headerName: 'Status', width: 115, cellRenderer: x => `<span class="bd ${PST[x.value] || 'ga'}">${esc(x.value)}</span>` },
+          { field: 'age_days', headerName: 'Age (d)', width: 95, filter: 'agNumberColumnFilter', cellStyle: x => (['created', 'sent'].includes(x.data.status) && x.value > 7) ? { color: '#fbbf24', fontWeight: 700 } : null },
+          { field: 'paypal_id', headerName: 'PayPal ID', width: 170, tooltipField: 'paypal_id', cellStyle: { fontFamily: 'monospace', fontSize: '12px' } },
+          { headerName: 'Actions', width: 190, sortable: false, filter: false, floatingFilter: false, cellRenderer: x => payActions(x.data) }
+        ]
+      });
+    }
+    async function paymentsRefresh() {
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'PayPal Payments'; $('#content').innerHTML = skel();
+      try {
+        const [d, st] = await Promise.all([api('/api/payments'), api('/api/paypal/status')]);
+        const s = d.summary;
+        const head = `<div class="proposal-box" style="margin-bottom:14px">
+          <b style="color:#93c5fd">💳 PayPal ${esc(st.env)} · ${st.configured ? 'connected' : 'not connected: set PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET'}</b>
+          <div class="m" style="margin-top:4px">${st.apis.map(esc).join(' · ')} · webhook verification ${st.webhook_verification ? 'on' : 'off (return-URL capture still works)'}</div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+            <div><span class="m">Collected</span><br><b style="color:#34d399;font-size:18px">${money(s.collected)}</b></div>
+            <div><span class="m">PayPal MRR</span><br><b style="color:#34d399;font-size:18px">${money(s.mrr)}/mo</b></div>
+            <div><span class="m">Outstanding</span><br><b style="color:#fbbf24;font-size:18px">${money(s.outstanding_total)}</b></div>
+            <div><span class="m">Refunded</span><br><b style="font-size:18px">${money(s.refunded)}</b></div>
+          </div></div>`;
+        if (!d.items.length) {
+          $('#content').innerHTML = head + empty('No PayPal payments yet', 'Open a proposal and click "PayPal checkout link", or ask Wren to "invoice &lt;company&gt;".');
+          return;
+        }
+        if (await loadAgGrid()) { $('#content').innerHTML = head + '<div id="paygrid" style="height:520px"></div>'; renderPayGrid(d.items); return }
+        $('#content').innerHTML = head + `<div class="tw"><table><thead><tr><th>Company<th>Item<th>Type<th>Amount<th>Status<th>PayPal ID<th>Age<th>Actions</tr></thead><tbody>` +
+          d.items.map(p => `<tr>
+            <td><b>${esc(p.company)}</b><div class="m">${esc(p.payer_email || p.contact_email || '')}</div></td>
+            <td>${esc(p.tier_name || '')}</td>
+            <td>${esc(p.kind)}</td>
+            <td><b>${money(p.amount)}${p.interval === 'month' ? '/mo' : ''}</b></td>
+            <td><span class="bd ${PST[p.status] || 'ga'}">${esc(p.status)}</span></td>
+            <td class="m" style="font-family:monospace">${esc(p.paypal_id || '')}</td>
+            <td>${p.age_days}d</td>
+            <td style="white-space:nowrap">
+              <button data-act="pay_sync" data-id="${p.id}">Sync</button>
+              ${['created', 'sent'].includes(p.status) ? `<button class="accent" data-act="pay_remind" data-id="${p.id}">AI reminder</button>` : ''}
+              ${['completed', 'paid', 'active'].includes(p.status) ? `<button data-act="pay_refund" data-id="${p.id}" data-kind="${esc(p.kind)}" data-amt="${p.amount}" data-co="${esc(p.company)}">${p.kind === 'subscription' ? 'Cancel' : 'Refund'}</button>` : ''}
+              ${p.approve_url && ['created', 'sent'].includes(p.status) ? `<a href="${esc(p.approve_url)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
+            </td></tr>`).join('') + `</tbody></table></div>`;
+      } catch (e) {
+        $('#content').innerHTML = empty('Could not load payments', esc(e.message));
+      }
+    }
+
     async function proposalsRefresh() {
-      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Leado Proposal Intelligence'; $('#content').innerHTML = skel();
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Dealwright Proposal Intelligence'; $('#content').innerHTML = skel();
       try {
         const d = await api('/api/proposals');
         if (!d.items.length) {
-          $('#content').innerHTML = empty('No Proposals Generated Yet', 'Open any qualified lead and click "Generate Leado Proposal" to create an executive SOW and tiered pricing.');
+          $('#content').innerHTML = empty('No Proposals Generated Yet', 'Open any qualified lead and click "Generate Dealwright Proposal" to create an executive SOW and tiered pricing.');
           return;
         }
         $('#content').innerHTML = `<div class="tw"><table><thead><tr><th>Company<th>Proposal Title<th>Scope Phases<th>Deliverables<th>Estimated Value<th>Status<th>Actions</tr></thead><tbody>` +
@@ -1379,26 +1469,28 @@
       }
     }
 
-    // ---- VIO COPILOT VIEW ----
+    // ---- WREN COPILOT VIEW ----
     async function copilotRefresh() {
-      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Vio: Autonomous Sales Ops Copilot';
+      stats(); $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Wren: Autonomous Sales Ops Copilot';
       $('#content').innerHTML = `
     <div class="chat-window">
       <div class="chat-messages" id="chat_box">
         <div class="chat-msg bot">
-          <b>👋 Hi, I'm Vio.</b> I'm your autonomous sales ops & strategy copilot.<br><br>
-          I can analyze your pipeline velocity, verify Blast Radius Zero sandbox containment, run site diagnostics, and draft client proposals.
+          <b>👋 Hi, I'm Wren.</b> I'm your autonomous sales ops & strategy copilot.<br><br>
+          I can analyze your pipeline, draft client proposals, and get them paid: PayPal pay links, invoices, refunds and AI payment reminders. Anything that moves money waits for your click.
           <div class="chat-actions">
             <button data-act="quick_chat" data-q="Give me an executive pipeline briefing">📊 Pipeline Briefing</button>
             <button data-act="quick_chat" data-q="Verify Blast Radius Zero sandbox containment">🛡️ Check Sandbox</button>
             <button data-act="quick_chat" data-q="Generate proposal for top scoring lead">📝 Proposal Intelligence</button>
+            <button data-act="quick_chat" data-q="Who still owes us money on PayPal?">💳 Who owes us?</button>
+            <button data-act="quick_chat" data-q="Remind everyone with outstanding PayPal payments">✍️ Chase payments</button>
             <button data-act="quick_chat" data-q="Find high-intent leads">🎯 Lead Hunter</button>
           </div>
         </div>
       </div>
       <div class="chat-input-bar">
-        <input id="chat_in" placeholder="Ask Vio to analyze pipeline, audit leads, or generate proposals..." autocomplete="off">
-        <button class="pri" data-act="send_chat">Ask Vio</button>
+        <input id="chat_in" placeholder="Ask Wren to analyze pipeline, audit leads, or generate proposals..." autocomplete="off">
+        <button class="pri" data-act="send_chat">Ask Wren</button>
       </div>
     </div>
     `;
@@ -1521,7 +1613,7 @@
         <div class="transcript" id="voice_log" role="log" aria-live="polite" aria-relevant="additions"><div class="who">Shimmer</div><p>The team is on the rail. Speak, type, or tap an agent. I will route the work and read the answer back.</p></div>
       </div>
       <div class="rail-col">
-        <div class="vio-core"><b>Leado VIO</b><span>PIPE SYNC · ${crm.live ? 'LOCKED' : 'OFF'}</span><span>VIO CORE V3.2.1</span></div>
+        <div class="vio-core"><b>Dealwright WREN</b><span>PIPE SYNC · ${crm.live ? 'LOCKED' : 'OFF'}</span><span>WREN CORE V3.2.1</span></div>
         <div class="rail-head">
           <div class="rail-metric"><span>Project Timeline</span><b id="m_progress_label">${m.progress}%</b><div class="track"><i id="m_progress" style="width:${Math.max(4, m.progress)}%"></i></div></div>
           <div class="rail-metric"><span>What's Delayed</span><b id="m_delay_label">${m.delayed} late</b><div class="track"><i id="m_delay" style="width:${Math.max(4, m.delay_pct)}%"></i></div></div>
@@ -1687,7 +1779,7 @@
     <div class="bar" style="margin-top:12px">
       <select id="st">${ST.map(s => `<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
       <button data-act="setst">Update status</button>
-      <button class="accent" data-act="genproposal_btn">⚡ Leado Proposal</button>
+      <button class="accent" data-act="genproposal_btn">⚡ Dealwright Proposal</button>
       <button data-act="sandboxaudit_btn">🛡️ Sandbox Audit</button>
       <button data-act="airesearch">AI Research</button>
       <button data-act="aidraft">AI Draft</button>
@@ -1697,11 +1789,13 @@
     ${prop && !prop.error ? `
       <div class="proposal-box">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <b style="color:#93c5fd">📄 Leado Proposal Ready: ${esc(prop.title)}</b>
+          <b style="color:#93c5fd">📄 Dealwright Proposal Ready: ${esc(prop.title)}</b>
           <span class="bd ge">${money(prop.est_value)}/mo</span>
         </div>
         <p style="font-size:12px;margin:8px 0;color:#cbd5e1">${esc(prop.executive_summary.slice(0, 180))}...</p>
         <button class="pri" data-act="view_proposal" data-pid="${prop.id}">View Full SOW & Pricing</button>
+        <button class="accent" data-act="paylink" data-pid="${prop.id}">💳 PayPal checkout link</button>
+        <div id="paylink_out"></div>
       </div>
     ` : ''}
     
@@ -1765,7 +1859,7 @@
       pg(t) { F.page += +t.dataset.d; refresh() },
       async export() {
         const b = await api('/api/export.csv?' + qs({}));
-        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'vultr-leads-export.csv'; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Dealwright-leads-export.csv'; a.click();
         toast('CSV exported');
       },
       async setst() { await api(`/api/leads/${OPEN}/status`, { method: 'POST', body: { status: $('#st').value } }); after('Status updated') },
@@ -1793,9 +1887,9 @@
         catch (e) { if (/SMTP/.test(e.message) && confirm('SMTP not configured. Mark as sent manually?')) { await api(`/api/emails/${eid(t)}/send`, { method: 'POST', body: { confirm: true, manual: true } }); after('Marked as sent') } else throw e }
       },
 
-      // ---- Leado PROPOSAL ACTIONS ----
+      // ---- Dealwright PROPOSAL ACTIONS ----
       async genproposal_btn() {
-        toast('Generating tailored Leado proposal with SOW & pricing…');
+        toast('Generating tailored Dealwright proposal with SOW & pricing…');
         try {
           const p = await api(`/api/leads/${OPEN}/proposal`, { method: 'POST', body: {} });
           toast('Proposal generated successfully!');
@@ -1856,12 +1950,64 @@
           </div>
         `).join('')}
         
+        <div id="paylink_out"></div>
         <div class="bt" style="margin-top:16px">
+          <button class="accent" data-act="paylink" data-pid="${p.id}">💳 PayPal checkout link</button>
+          ${(p.pricing_tiers || []).map((tier, i) => `<button data-act="invoice_tier" data-lid="${p.lead_id}" data-tier="${i}" data-co="${esc(p.company)}" data-name="${esc(tier.name)}" data-price="${esc(tier.price)}">🧾 Invoice: ${esc(tier.name.replace(' (Recommended)', ''))}</button>`).join('')}
           <button class="pri" onclick="window.print()">🖨️ Print / Export PDF</button>
           <button data-act="close">Close</button>
         </div>
       `;
         } catch (e) { toast(e.message, 1) }
+      },
+
+      // ---- PAYPAL ACTIONS ----
+      async paylink(t) {
+        try {
+          const r = await api(`/api/proposals/${t.dataset.pid}/paylink`, { method: 'POST', body: {} });
+          const o = $('#paylink_out');
+          if (o) o.innerHTML = `<div class="pv" style="margin-top:10px">Client PayPal checkout link:<br><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.url)}</a></div>`;
+          try { await navigator.clipboard.writeText(r.url); toast('PayPal checkout link copied') } catch (x) { toast('PayPal checkout link ready') }
+        } catch (e) { toast(e.message, 1) }
+      },
+      async invoice_tier(t) {
+        const d = t.dataset;
+        if (!confirm(`Send a PayPal invoice to ${d.co} for ${d.name} (${d.price})? PayPal will email the client.`)) return;
+        toast('Creating and sending PayPal invoice…');
+        try { const r = await api(`/api/leads/${d.lid}/invoice`, { method: 'POST', body: { tier: +d.tier, confirm: true } }); toast(`Invoice ${r.paypal_id} sent`) }
+        catch (e) { toast(e.message, 1) }
+      },
+      async pay_sync(t) {
+        try { const r = await api(`/api/payments/${t.dataset.id}/sync`, { method: 'POST', body: {} }); toast('Status: ' + r.status); paymentsRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      async pay_remind(t) {
+        toast('AI is drafting a payment reminder…');
+        try { const r = await api(`/api/payments/${t.dataset.id}/remind`, { method: 'POST', body: {} }); toast(`${r.ai ? 'AI' : 'Template'} reminder queued in Approvals: "${r.subject}"`) } catch (e) { toast(e.message, 1) }
+      },
+      async pay_refund(t) {
+        const d = t.dataset, sub = d.kind === 'subscription';
+        if (!confirm(`${sub ? 'Cancel the PayPal subscription for' : 'Refund ' + money(d.amt) + ' to'} ${d.co}?`)) return;
+        try { await api(`/api/payments/${d.id}/refund`, { method: 'POST', body: { confirm: true, reason: 'Issued from Dealwright' } }); toast(sub ? 'Subscription cancelled' : 'Refund issued'); paymentsRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      async vio_api(t) {
+        const a = VA[+t.dataset.i]; if (!a) return;
+        if (a.confirm && !confirm(a.confirm)) return;
+        const box = $('#chat_box');
+        t.disabled = true;
+        try {
+          const r = await api(a.path, { method: a.method || 'POST', body: a.body || {} });
+          let msg = '✅ Done.';
+          if (r.url) msg = `✅ PayPal checkout link: <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.url)}</a>`;
+          else if (r.kind === 'invoice') msg = `✅ PayPal invoice <b>${esc(r.paypal_id)}</b> sent for ${money(r.amount)}.` + (r.approve_url ? ` <a href="${esc(r.approve_url)}" target="_blank" rel="noopener noreferrer">View invoice</a>` : '');
+          else if (r.email_id) msg = `✅ ${r.ai ? 'AI-written' : 'Template'} reminder drafted and waiting in <b>Approvals</b>:<br><i>${esc(r.subject)}</i>`;
+          else if (r.status === 'refunded' || r.status === 'cancelled') msg = `✅ PayPal ${r.status === 'refunded' ? 'refund issued' : 'subscription cancelled'} for ${money(r.amount)}.`;
+          else if (r.executive_summary) msg = `✅ Proposal generated: <b>${esc(r.title)}</b>. Ask me for a PayPal pay link next.`;
+          box.innerHTML += `<div class="chat-msg bot">${msg}</div>`;
+        } catch (e) {
+          box.innerHTML += `<div class="chat-msg bot" style="border-left-color:var(--bad)">PayPal error: ${esc(e.message)}</div>`;
+          t.disabled = false;
+        }
+        box.scrollTop = box.scrollHeight;
       },
 
       // ---- SANDBOX ACTIONS ----
@@ -1904,10 +2050,12 @@
 
         try {
           const res = await api('/api/copilot/chat', { method: 'POST', body: { message: msg } });
-          box.innerHTML += `<div class="chat-msg bot">${esc(res.reply).replace(/\\n/g, '<br>')}
+          box.innerHTML += `<div class="chat-msg bot">${md(res.reply)}
         ${res.actions && res.actions.length ? `
           <div class="chat-actions">
-            ${res.actions.map(a => `<button class="accent" data-act="${a.type === 'view' ? 'view' : 'quick_chat'}" data-v="${esc(a.target || '')}" data-q="${esc(a.q || '')}">${esc(a.label)}</button>`).join('')}
+            ${res.actions.map(a => a.type === 'api'
+              ? `<button class="accent" data-act="vio_api" data-i="${VA.push(a) - 1}">${esc(a.label)}</button>`
+              : `<button class="accent" data-act="${a.type === 'view' ? 'view' : 'quick_chat'}" data-v="${esc(a.target || '')}" data-q="${esc(a.q || '')}">${esc(a.label)}</button>`).join('')}
           </div>
         `: ''}
       </div>`;
