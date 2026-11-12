@@ -1,295 +1,169 @@
-# Leado 2.0
+# Dealwright: AI quote-to-cash on PayPal
 
-> Autonomous sales operations and a sandboxed agent workforce — from lead discovery to signed scope of work.
+> An AI sales agent that finds a client, diagnoses their problem, writes the proposal, and gets it **paid through PayPal**, with a human approving every step that moves money.
 
-[![CI](https://github.com/Muhammad-Tayyab-Bhutto/Leado/actions/workflows/ci.yml/badge.svg)](https://github.com/Muhammad-Tayyab-Bhutto/Leado/actions/workflows/ci.yml)
-[![Deploy](https://github.com/Muhammad-Tayyab-Bhutto/Leado/actions/workflows/deploy.yml/badge.svg)](https://github.com/Muhammad-Tayyab-Bhutto/Leado/actions/workflows/deploy.yml)
+[![CI](https://github.com/Muhammad-Tayyab-Bhutto/Dealwright/actions/workflows/ci.yml/badge.svg)](https://github.com/Muhammad-Tayyab-Bhutto/Dealwright/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![PayPal Sandbox](https://img.shields.io/badge/PayPal-Sandbox-003087?logo=paypal&logoColor=white)](https://developer.paypal.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Leado 2.0** is an AI sales-operations platform for agencies, B2B SaaS, and IT
-service providers. It runs the full revenue lifecycle in one control plane:
-
-- multi-source lead discovery and technographic research,
-- evidence-gated, human-in-the-loop email outreach,
-- a CRM pipeline with approvals, suppression, and compliance gates,
-- 1-click Statement of Work (SOW) proposal generation,
-- **Vio**, an in-CRM copilot that queries and acts on the pipeline,
-- **Blast Radius Zero**, an ephemeral sandbox for untrusted site audits.
-
-Built for the **LabLab × Vultr Agent Rush Hackathon 2026** and designed to run on
-a single **Vultr Cloud Compute** instance with **Vultr Serverless Inference**.
-
----
-
-## Architecture
+Agencies and B2B service teams lose deals in the gap between *"proposal sent"*
+and *"got paid"*. Proposals sit in PDFs, invoices go out days later, and nobody
+chases the unpaid ones. Dealwright closes that gap:
 
 ```mermaid
 flowchart LR
-    U[Browser<br/>CRM UI] -->|Bearer token| A[Leado control plane<br/>Python HTTP + SQLite]
-
-    A --> V[Vio copilot]
-    A --> P[Proposal engine]
-    A --> G[Growth desk]
-    A --> L[Lead finder]
-
-    V --> I[Vultr Serverless Inference<br/>api.vultrinference.com/v1]
-    P --> I
-    G --> I
-    L --> I
-
-    A --> S[Blast Radius Zero sandbox]
-    S -->|ephemeral docker run| C[python:3.11-alpine<br/>read-only · cap-drop=ALL<br/>256 MB · 0.5 CPU · non-root]
+    A[Find & research lead<br/>AI] --> B[Diagnose problem<br/>AI + sandboxed audit]
+    B --> C[Write SOW + 3 pricing tiers<br/>AI]
+    C --> D[Client pay page<br/>PayPal Orders / Subscriptions]
+    D -->|capture or webhook| E[Deal auto-moves to WON<br/>MRR updated]
+    C --> F[Wren: invoice Acme<br/>PayPal Invoicing]
+    F --> G[Unpaid? AI drafts reminder<br/>human approves]
+    E --> H[Wren: refund / cancel<br/>PayPal Payments]
 ```
 
-| Layer | Responsibility |
-|---|---|
-| **Control plane** | `app.py` + `crm.py` — SQLite store, scoring, REST API, and the single-page UI. |
-| **Inference** | Vultr Serverless Inference (`meta/llama-3.1-70b-instruct`), with OpenRouter as an optional fallback. |
-| **Sandbox** | `sandbox.py` — throwaway containers for untrusted audits with zero host secrets. |
-| **Delivery** | Docker Compose on Vultr Cloud Compute, deployed by `deploy_vultr.sh` or GitHub Actions. |
+## What it does
 
----
+| Step | What happens | AI | PayPal |
+|---|---|---|---|
+| 1. Discover | Multi-source lead discovery and technographic research | LLM research and scoring | |
+| 2. Propose | Executive SOW with a 3-phase scope and three pricing tiers | LLM writes the summary from audit evidence | |
+| 3. **Get paid** | One click creates a client pay link. One-time tiers check out with **Orders v2**; monthly tiers create a **product, plan and subscription** on the fly | | Orders v2, Subscriptions v1 |
+| 4. **Close the deal** | On capture (return URL) or a **signature-verified webhook**, the lead moves to WON, MRR or project value is recorded, and the timeline is updated | | Webhooks, verify-webhook-signature |
+| 5. **Agentic billing** | Ask **Wren**: *"invoice FinFlow for the monthly plan"*, *"who owes us money?"*, *"refund DataStream"* | An LLM tool router picks the PayPal tool and extracts the company and tier | Invoicing v2, Refunds, Subscription cancel |
+| 6. **AI collections** | For outstanding payments, the AI writes a reminder whose tone matches how long the payment has been open, with the pay link, and queues it in **Approvals** | LLM writes the reminder | Pay link / invoice link |
 
-## Highlights
+**Safety model: the AI proposes, a person approves, PayPal executes.** Wren
+never moves money on its own. Invoices, refunds and cancellations come back as
+confirmation buttons, and the API rejects them without `confirm: true`.
+Reminder emails go through the existing human-approval and suppression gates.
 
-| Capability | What it does |
-|---|---|
-| 🔍 **Lead discovery** | Discovers prospects across search, GitHub, job boards, and B2B directories; detects frontend, CMS, CDN, and API signals. |
-| 🛡️ **Blast Radius Zero** | Audits run in ephemeral containers with `--read-only`, `--cap-drop=ALL`, 256 MB RAM, 0.5 CPU, an 8 s timeout, and a scrubbed environment. |
-| 📄 **Proposal intelligence** | Turns diagnostic evidence into an executive SOW with a 3-phase scope and three pricing tiers. |
-| 📬 **Compliant outreach** | Multi-variant drafts are blocked without verbatim evidence; every email needs human approval before SMTP. |
-| 🤖 **Vio copilot** | Natural-language pipeline queries and one-click actions inside the CRM drawer. |
-| 📊 **Pipeline CRM** | Kanban and table views, approvals, activity timeline, CSV export, and suppression lists. |
-| 🧪 **Self-verifying security** | `GET /api/sandbox/status` runs a live containment test and reports PASS/FAIL. |
+## Quick start for judges (about 10 minutes)
 
----
+### 1. PayPal sandbox credentials
+1. Sign in at <https://developer.paypal.com>, then go to **Apps & Credentials** → **Sandbox** → **Create App**.
+2. Copy the **Client ID** and **Secret**.
+3. Under **Testing Tools → Sandbox Accounts**, note the **Personal** account email and password. You'll use it to pay as the client.
 
-## Quick start
-
-### Docker (recommended)
-
+### 2. Check your PayPal keys (about 30 seconds)
 ```bash
-git clone https://github.com/Muhammad-Tayyab-Bhutto/Leado.git
-cd Leado
+python scripts/paypal_selfcheck.py   # PASS/FAIL for OAuth, Orders, Subscriptions, Invoicing, Webhooks (sandbox only)
+```
 
+### 3. Run
+```bash
+git clone https://github.com/Muhammad-Tayyab-Bhutto/Dealwright.git && cd Dealwright
 cp .env.example .env
-# Set SOFTORASYSTEMS_TOKEN to a random 16+ character secret.
-# Add VULTR_INFERENCE_API_KEY or OPENROUTER_API_KEY for AI features.
-
-docker compose up --build
-```
-
-Open <http://localhost:8000> and enter your access token.
-
-### Local Python
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+#   SOFTORASYSTEMS_TOKEN=<any 16+ char secret>
+#   PAYPAL_CLIENT_ID=...  PAYPAL_CLIENT_SECRET=...
+#   OPENROUTER_API_KEY=... OPENROUTER_MODEL=<a fast chat model>   (optional; AI falls back to templates)
+python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env
-export SOFTORASYSTEMS_TOKEN="$(openssl rand -hex 24)"
+python seed_demo_pipeline.py          # 5 demo leads with proposals
 python app.py serve 8000
 ```
+Or run `docker compose up --build`. Open <http://localhost:8000> and enter your token.
 
-### Seed demo data (optional)
+### 4. Try the flow
+1. **Proposals** → open any proposal → **💳 PayPal checkout link** → open the link in a private window.
+2. Pick a tier → **Pay with PayPal** → sign in with the sandbox **Personal** account → approve.
+3. You land on the confirmation page. In the CRM, the lead is now **WON** and appears in **PayPal Payments** with its capture ID.
+4. **Wren AI Copilot** → *"Who still owes us money on PayPal?"* → **AI reminder**, then *"invoice CloudPulse for the monthly growth plan"* → confirm.
+5. **PayPal Payments** → **Refund** (or **Cancel** for subscriptions).
 
-```bash
-python seed_demo_pipeline.py
-```
+Webhooks are optional locally, because the buyer return URL captures the
+payment. When the app is deployed, add a webhook in your PayPal app pointing to
+`https://<host>/api/paypal/webhook` and set `PAYPAL_WEBHOOK_ID`.
 
-This creates a realistic pipeline with scored leads, evidence, proposals, and
-draft emails. Databases are local-only and git-ignored.
+### Hosted demo
+Deploy with **Render**: `render.yaml` is a ready Blueprint. Set
+`PUBLIC_BASE_URL` to the Render URL so PayPal return links point back to it.
 
----
+## Tools used
 
-## Configuration
-
-All settings live in `.env` (see [`.env.example`](.env.example)). The minimum
-required value is a login token of at least 16 characters.
-
-| Variable | Required | Purpose |
-|---|---|---|
-| `SOFTORASYSTEMS_TOKEN` | ✅ | Bearer token for the UI and API. Generated automatically by the deploy script. |
-| `VULTR_INFERENCE_API_KEY` | Recommended | Enables Vultr Serverless Inference. |
-| `VULTR_MODEL` | — | Defaults to `meta/llama-3.1-70b-instruct`. |
-| `OPENROUTER_API_KEY` | — | Fallback LLM provider. |
-| `OPENROUTER_MODEL` | — | Fallback model name. |
-| `SOFTORASYSTEMS_ADDRESS` | Recommended | Physical address injected into outreach for CAN-SPAM/GDPR compliance. |
-| `GROWTH_SENDER_NAME` / `GROWTH_SENDER_EMAIL` / `GROWTH_POSTAL_ADDRESS` | Recommended | Growth-desk sender identity. |
-| `SOFTORA_HOST` / `SOFTORA_PORT` | — | Bind address and port (default `127.0.0.1:8000`; Compose sets `0.0.0.0`). |
-| `DOMAIN` | Recommended | Public hostname. When set, `deploy_vultr.sh` starts Caddy and provisions HTTPS automatically. |
-
-Optional data-provider keys (`HUNTER_API_KEY`, `SERPAPI_API_KEY`,
-`CLEARBIT_API_KEY`, `CRUNCHBASE_API_KEY`, CAPTCHA solvers, SMTP) are read from
-the same file. Missing keys disable only the corresponding integration.
-
----
-
-## Deploy to Vultr
-
-The full runbook is in **[`DEPLOY_VULTR.md`](DEPLOY_VULTR.md)**. Short version:
-
-1. Launch **Ubuntu 24.04 LTS x64** (or Debian 12/13) on Cloud Compute (1 vCPU / 2 GB recommended).
-2. Allow ports **22, 80, 443** in the Vultr firewall group.
-3. Copy the project to `/opt/leado`.
-4. Set `DOMAIN` in `.env` for automatic HTTPS, or leave it blank for plain HTTP.
-5. Run:
-
-```bash
-cd /opt/leado
-chmod +x deploy_vultr.sh
-./deploy_vultr.sh
-```
-
-The script installs Docker, configures `ufw`, generates a token, builds the
-image, and verifies health. With `DOMAIN` set it starts **Caddy** on 80/443 and
-obtains a Let's Encrypt certificate automatically; the app itself is bound to
-`127.0.0.1:8000`. Without a domain it publishes the app on port 80.
-
-**Current production target:** Vultr Cloud Compute (Mumbai, `65.20.76.188`) at
-`https://leado.softorasystems.com` — point an `A` record for `leado` at that IP.
-
----
-
-## CI/CD
-
-Two GitHub Actions workflows ship with the repo:
-
-### `ci.yml` — every push and pull request
-
-- byte-compiles all Python sources,
-- runs the smoke suite on Python 3.11 and 3.12,
-- builds the Docker image,
-- starts the container and verifies the UI, `401` without a token, and `200`
-  with one.
-
-### `deploy.yml` — deployment to Vultr
-
-Triggered manually, or automatically on `main` once enabled.
-
-Configure these in **Settings → Secrets and variables → Actions**:
-
-| Kind | Name | Value |
-|---|---|---|
-| Secret | `VULTR_HOST` | VM public IP or hostname |
-| Secret | `VULTR_USER` | SSH user (use `root`, or a user with passwordless sudo) |
-| Secret | `VULTR_SSH_KEY` | Private key whose public key is on the VM |
-| Secret | `VULTR_PORT` | Optional, defaults to `22` |
-| Variable | `DEPLOY_ENABLED` | Set to `true` to deploy automatically on `main` |
-
-The workflow rsyncs the tree (excluding `.env` and databases), then runs
-`deploy_vultr.sh` over SSH. Existing server-side `.env` and SQLite data are
-preserved.
-
----
-
-## Security model
-
-Leado treats every external website and model-generated inspection script as
-untrusted.
-
-- **Ephemeral execution** — audits run in a fresh container that is destroyed
-  after the run.
-- **Resource limits** — 256 MB memory, 0.5 CPU, 64 PID limit, 8–10 s timeout.
-- **Least privilege** — `--read-only`, `--cap-drop=ALL`,
-  `--security-opt=no-new-privileges`, and a non-root UID.
-- **Secret hygiene** — no host environment variables are forwarded; the
-  containment test checks for app credentials and `/etc/shadow` access.
-- **Token auth** — every API route except the public UI shell requires a
-  `Bearer` token; the token is never embedded in the UI.
-- **Human-in-the-loop** — no email is sent without explicit approval, and
-  suppression lists are enforced.
-
-Verify containment on a running instance:
-
-```bash
-curl -H "Authorization: Bearer $SOFTORASYSTEMS_TOKEN" \
-  http://localhost:8000/api/sandbox/status
-```
-
-```json
-{
-  "status": "PASSED",
-  "details": {
-    "read_host_etc": false,
-    "access_env_secrets": false,
-    "contained": true,
-    "sandbox_type": "docker_isolated"
-  }
-}
-```
-
----
-
-## API surface
-
-All routes except `GET /` and `GET /favicon.ico` require
-`Authorization: Bearer <token>`.
-
-| Group | Endpoints |
+| Tool | How it's used |
 |---|---|
-| Pipeline | `GET /api/stats`, `GET /api/facets`, `GET /api/leads`, `GET/PATCH /api/leads/{id}` |
-| Workflow | `POST /api/leads/{id}/status`, `/note`, `/reply`, `/draft`, `/research`, `/ai-draft`, `/classify-reply` |
-| Email | `GET /api/emails`, `PATCH /api/emails/{id}`, `POST /api/emails/{id}/send` |
-| Proposals | `GET /api/proposals`, `GET/POST /api/leads/{id}/proposal`, `PATCH /api/proposals/{id}` |
-| Sandbox | `GET /api/sandbox/status`, `POST /api/leads/{id}/sandbox-audit` |
-| Copilot / voice | `POST /api/copilot/chat`, `GET /api/copilot/suggestions`, `GET /api/voice/state`, `POST /api/voice/talk` |
-| Growth desk | `GET /api/growth/desk`, `POST /api/growth/leads`, `POST /api/growth/leads/{id}/drafts`, `/touch`, `/opt-out` |
-| Lead finder / bulk | `/api/lead_finder/*`, `/api/bulk/*` |
-| Export | `GET /api/export.csv` |
+| **PayPal Orders v2** | One-time tier checkout: create the order with return/cancel URLs, then capture on return. Idempotency keys on create, capture and refund. |
+| **PayPal Subscriptions v1** | Monthly tiers: a catalog product, billing plan and subscription are created from the AI-priced tier. |
+| **PayPal Invoicing v2** | Wren's `send_invoice` tool: draft and send an invoice to the lead's contact. |
+| **PayPal Payments v2** | Refunds of captured payments; cancelling subscriptions. |
+| **PayPal Webhooks** | `PAYMENT.CAPTURE.COMPLETED/REFUNDED`, `BILLING.SUBSCRIPTION.ACTIVATED/CANCELLED`, `PAYMENT.SALE.COMPLETED`, `INVOICING.INVOICE.PAID`. Each event is checked with `verify-webhook-signature` and de-duplicated by event ID. |
+| **AG Grid Community** (v33) | The PayPal Payments ledger: sorting, floating filters, number filters on amount and age, status pills, inline Sync / AI reminder / Refund actions, and amber highlighting for payments open more than 7 days. Falls back to a plain table if the CDN is unreachable. |
+| **Render** | `render.yaml` Blueprint for a hosted demo (seeds demo data on boot). |
+| **LLM via OpenRouter** (any model, e.g. Claude, GPT, Llama), or Vultr Serverless Inference | Lead research and scoring, proposal executive summaries, Wren's tool router (JSON tool selection plus company and tier extraction), and the collections agent that writes reminders. If no key is set, everything falls back to deterministic logic. |
 
----
+## Architecture
 
-## Project layout
+| File | Role |
+|---|---|
+| `paypal.py` | PayPal REST client (OAuth token cache), checkout, subscriptions, invoicing, refunds, sync, webhooks, AI reminders |
+| `paypal_web.py` | Public client pay page, scoped to an unguessable per-proposal token |
+| `copilot.py` | Wren: LLM tool router plus PayPal tools, with confirmation gating |
+| `crm.py` | HTTP server and REST API. Public routes are only `/`, `/pay/<token>…` and `/api/paypal/webhook` |
+| `proposal_engine.py` | SOW plus pricing tiers (now with numeric `amount` / `interval` for PayPal) |
+| `agent.py` | LLM client (OpenRouter / Vultr) with a circuit breaker and daily cap |
+| `ui.html` | Single-page CRM: pipeline, proposals, **PayPal Payments**, Wren |
+| `app.py`, `lead_finder/`, `sandbox.py`, `growth.py`, `workforce.py` | Discovery, scoring, sandboxed audits, outreach |
 
-```text
-.
-├── app.py                  # SQLite schema, scoring, drafting, compliance
-├── crm.py                  # HTTP server, REST API, UI host
-├── agent.py                # Vultr Serverless Inference + OpenRouter client
-├── copilot.py              # Vio copilot
-├── proposal_engine.py      # SOW generation
-├── sandbox.py              # Blast Radius Zero execution engine
-├── growth.py               # Growth desk
-├── workforce.py            # Agent workforce orchestration
-├── lead_finder/            # Discovery, enrichment, stealth, bulk jobs
-├── ui.html                 # Single-page CRM interface
-├── tests/                  # Smoke + containment tests
-├── Dockerfile
-├── docker-compose.yml
-├── deploy_vultr.sh
-└── .github/workflows/      # CI and Vultr CD
-```
+### PayPal API surface
+| Route | Auth | Purpose |
+|---|---|---|
+| `GET /pay/{token}` | public (token) | Client proposal and pricing with PayPal buttons |
+| `POST /pay/{token}/checkout` | public (token) | Create the order or subscription, then 303 redirect to PayPal |
+| `GET /pay/{token}/return` | public (token) | Capture the order / confirm the subscription, then mark WON |
+| `POST /api/paypal/webhook` | PayPal signature | Event sync |
+| `GET /api/paypal/status`, `GET /api/payments` | bearer | Status, ledger, collected / MRR / outstanding |
+| `POST /api/proposals/{id}/paylink` | bearer | Create the client pay link |
+| `POST /api/leads/{id}/invoice` | bearer + `confirm` | Send a PayPal invoice |
+| `POST /api/payments/{id}/refund` | bearer + `confirm` | Refund or cancel |
+| `POST /api/payments/{id}/sync` | bearer | Pull the latest state from PayPal |
+| `POST /api/payments/{id}/remind` | bearer | AI collections draft (queued for approval) |
 
----
+## Responsible by design
+
+- **Money:** the AI proposes, a person confirms, and PayPal executes. Money-moving APIs require `confirm: true`. Pay links are unguessable, scoped to one proposal, throttled, and can't be paid twice. Internal lead scores are never shown on client pages.
+- **Webhooks:** every event is verified with PayPal's `verify-webhook-signature` and de-duplicated by event ID.
+- **Crawling:** the crawler uses an honest user agent and robots.txt checks, rate-limits with backoff, and uses **no** proxy or user-agent rotation. **CAPTCHAs are never solved**: a bot challenge means the site is skipped. No LinkedIn scraping.
+- **Outreach:** every email (cold or collections) needs human approval and goes through suppression lists and CAN-SPAM address checks.
+- **Untrusted audits** run in a throwaway container with no host environment variables. The live containment proof checks that no PayPal, LLM or app secrets are visible.
 
 ## Testing
 
 ```bash
-pip install -r requirements.txt
 SANDBOX_DISABLE_DOCKER=1 python -m unittest discover -s tests -v
 ```
 
-The suite starts the real HTTP server on an ephemeral port, checks token auth,
-verifies the public UI contains no embedded credentials, and runs the
-containment proof. It needs no API keys or network access.
+`lead_finder/tests.py` checks the polite-crawling guarantees.
+`tests/test_paypal.py` runs the full quote-to-cash flow over real HTTP against
+an in-memory fake PayPal API. It covers pay link → checkout redirect → capture →
+WON, subscription → MRR, the invoice confirmation gate, the AI reminder draft,
+refunds, idempotent returns, rejection of unsigned webhooks, and Wren's
+routing of money actions to confirmations. No keys or network needed.
 
----
+## Built during the PayPal hackathon
 
-## Hackathon context
+This is an existing project that we substantially extended for this hackathon,
+as the rules allow. It started as an AI lead-generation CRM called "Dealwright"
+(discovery, research, proposals, sandboxed audits; first commit 2026-11-09).
+It had **no payment functionality**. During this hackathon we:
 
-| Track | How Leado addresses it |
-|---|---|
-| **Powering the Future of Work** | End-to-end sales operations: discovery → audit → CRM → proposal → approved outreach. |
-| **Blast Radius Zero** | Every untrusted audit runs in an ephemeral, capability-stripped container with a live containment proof. |
-| **Vultr Cloud Compute** | Single-VM Docker Compose deployment with one-command provisioning. |
-| **Vultr Serverless Inference** | Native client for `https://api.vultrinference.com/v1`, no GPU provisioning. |
+- **added the whole money side:** `paypal.py`, `paypal_web.py`, the PayPal
+  Payments view, Wren's PayPal tools and LLM tool router, the AI collections
+  agent, the webhook pipeline, and machine-readable pricing tiers;
+- **made crawling compliant:** removed the CAPTCHA-solving integrations, the
+  proxy and user-agent rotation, and LinkedIn scraping. The crawler now uses an
+  honest user agent, rate-limits itself, and skips any site that shows a bot
+  challenge (`lead_finder/politeness.py`, `lead_finder/captcha.py`);
+- **renamed the product** to Dealwright to avoid confusion with unrelated
+  products called Dealwright;
+- added `render.yaml` and `tests/test_paypal.py`.
 
----
+Every change is in the git history after commit `884006f`.
+
+## Self-hosting on a VM
+
+`deploy_vultr.sh` and `DEPLOY_VULTR.md` still provide a one-command Docker +
+Caddy (automatic HTTPS) deployment on any Ubuntu/Debian VM.
 
 ## License
 

@@ -1,28 +1,19 @@
-# 🎬 Leado 2.0 × Vultr | Demo Video Presentation Script (2-3 Minutes)
+# Demo video script (target 2:45, hard limit 3:00)
 
-> **Hackathon**: LabLab × Vultr: Agent Rush  
-> **Speaker**: Muhammad Tayyab Bhutto  
-> **Target Video Duration**: 2 minutes 30 seconds  
-> **Screen Recording Setup**: Browser open at `http://<VULTR_IP>:8000/` (Dark mode UI)
+**Setup before recording**
+- `python scripts/paypal_selfcheck.py` must show all PASS. Then run `python seed_demo_pipeline.py` and `python app.py serve 8000`, with a *fast* LLM model in `.env`.
+- Tab 1: the CRM (signed in). Tab 2: a private window for the client and the PayPal sandbox **Personal** account.
+- Edit one demo lead's contact email to your sandbox Personal email, so the invoice arrives in that account.
+- Do a full dry run first: the first PayPal call of a session is slower (OAuth token).
+- No background music unless it's royalty-free. Record at 1080p.
 
----
-
-## ⏱️ Video Timeline Breakdown
-
-| Timestamp | Section | Visual On Screen | Narration / Key Talking Points |
-| :--- | :--- | :--- | :--- |
-| **0:00 - 0:25** | **The Hook & Problem** | Pitch Slide / Dashboard view showing empty vs populated pipeline | *"Every digital agency and B2B service firm faces the same bottleneck: sales operations. Sales engineers and founders spend 20+ hours a week manually scouring the web for leads, diagnosing site flaws, writing custom proposals, and chasing outreach. An agent that only chats is just a demo. But an agent that executes real, safe work on cloud infrastructure is a product."* |
-| **0:25 - 0:50** | **Introducing Leado 2.0 on Vultr** | Browser at `http://<VULTR_IP>:8000/`. Point out the **Vultr Serverless Inference** badge | *"Meet **Leado 2.0**, an enterprise autonomous sales operations workforce inspired by Leado.ai, built natively on **Vultr Cloud Compute** and powered by **Vultr Serverless Inference**. Vultr acts as our centralized control plane, dispatching tasks and executing LLM reasoning via `api.vultrinference.com` using Llama 3.1 70B and Mistral Large with zero GPU idle cost."* |
-| **0:50 - 1:20** | **Autonomous Discovery & Deep Evidence Audit** | Click **Pipeline**, open lead **DataStream Analytics** | *"Here is our active sales pipeline. Rather than scraping generic directory lists, Leado scans 8+ discovery channels—Google, GitHub, job boards, and technographic footprints. Notice this lead: our crawler found a concrete, verbatim bottleneck on their pricing page: 'Manual CSV export workflows causing a 4-hour delay in real-time reporting'. Leado verified this quote directly from the live URL and automatically scored the lead 89/100."* |
-| **1:20 - 1:45** | **The Containment Moment (Blast Radius Zero)** | Click **Blast Radius Sandbox** tab, run audit | *(REQUIRED CONTAINMENT MOMENT)*: *"Safety is paramount. Under our **Blast Radius Zero** architecture, every dynamic website audit and diagnostic script runs inside an ephemeral, isolated container. Notice our live containment certificate: memory is capped at 256MB, CPU at 0.5 vCPU, with an 8-second execution ceiling. Crucially, 100% of host environment variables and Vultr API keys are scrubbed before execution. If an untrusted script attempts to inspect `/etc/shadow` or leak tokens, it is blocked instantly."* |
-| **1:45 - 2:10** | **Leado Proposal Intelligence (SOW)** | Open lead drawer, click **⚡ Leado Proposal**, then **View Full SOW & Pricing** | *"Next is our signature Leado feature: **Proposal Intelligence**. With one click, Leado transforms diagnosed technical flaws into a complete, commercial Statement of Work. Notice: a strategic Executive Summary, verbatim evidence, a structured 3-phase delivery roadmap from Remediation to AI Automation, and transparent 3-tiered pricing ($2,000 sprint, $3,500/mo growth retainer, $7,000/mo enterprise suite)—ready to print or export as PDF."* |
-| **2:10 - 2:30** | **Vio AI Copilot & Email Gate** | Click **Vio AI Copilot**, click **📊 Pipeline Briefing**, then open **Email Approvals** | *"Inside the platform is **Vio**, our autonomous CRM copilot. With natural language, we can ask Vio for an executive pipeline briefing, analyze revenue velocity, or dispatch batch discovery. Finally, under **Email Approvals**, human-in-the-loop review ensures no outreach is ever sent without explicit founder sign-off."* |
-| **2:30 - 2:45** | **Closing & Architecture Summary** | Show Architecture Diagram from README, return to Dashboard | *"Leado 2.0 transforms sales operations from a manual grind into a sandboxed, revenue-generating engine—powered end-to-end by Vultr Cloud Compute and Serverless Inference. Thank you!"* |
-
----
-
-## 🎯 Tips for Recording Your Screen
-1. **Resolution**: Record at 1080p (1920x1080) for crisp typography.
-2. **Audio**: Speak with clear enthusiasm and steady pacing.
-3. **Pointers**: Click deliberately on the **Vultr badge**, **Blast Radius Sandbox** tab, **Leado Proposal**, and **Vio Copilot**.
-4. **Export**: Upload to YouTube (Unlisted) or Loom, and paste the URL directly into your LabLab submission form before the 4:00 AM deadline!
+| Time | On screen | Say |
+|---|---|---|
+| 0:00–0:15 | Pipeline view | "Agencies lose deals between *proposal sent* and *got paid*. Dealwright is an AI agent that closes that gap, from first research to money in PayPal." |
+| 0:15–0:45 | Open **FinFlow** → the problem found in the audit → **⚡ Proposal** → **View Full SOW** | "The AI found a real bottleneck on their site and turned it into a scoped proposal with three pricing tiers: a one-time sprint and two monthly plans." |
+| 0:45–1:00 | **💳 PayPal checkout link** → paste it into the private window | "One click gives the client a pay page. One-time tiers use PayPal Orders; monthly tiers create a PayPal subscription on the fly." |
+| 1:00–1:35 | Client page → **Subscribe with PayPal** on Growth → sandbox login → approve → confirmation | "The client approves in PayPal…" (pause on the confirmation) "…and the subscription is live." |
+| 1:35–1:50 | Back to the CRM: lead is **WON** → **PayPal Payments** (AG Grid ledger): filter by status, sort by age | "No manual data entry. The capture, or a signature-verified webhook, moved the deal to Won and recorded the MRR. The ledger is AG Grid: filter what's outstanding, sort by age, act inline." |
+| 1:50–2:25 | **Wren** → *"Who still owes us money on PayPal?"* → **AI reminder** → *"Invoice CloudPulse for the one-time sprint"* → the confirm dialog → the invoice ID | "Wren is the agent. An LLM picks the PayPal tool, finds the company and the tier, and drafts collection emails whose tone depends on how long they've been unpaid. It never moves money by itself: every invoice, refund or cancellation needs my click." |
+| 2:25–2:40 | **Approvals** shows the reminder draft · **PayPal Payments** → **Refund** on the sprint | "Reminders go through human approval, and refunds are one confirmed click." |
+| 2:40–2:55 | README architecture diagram | "PayPal Orders, Subscriptions, Invoicing, Refunds and Webhooks, driven by AI with a human in the loop. That's Dealwright." |
