@@ -155,7 +155,10 @@ class VioCopilot:
             sysmsg = ("You route requests for a CRM's payments agent. Tools:\n" +
                       "\n".join(f"- {k}: {v}" for k, v in self.TOOLS.items()) +
                       '\nReturn JSON only: {"tool": "<name>", "company": "<company name or empty>", "tier": <0|1|2 or null>, "reason": "<short>"}')
-            box["out"] = agent.llm(sysmsg, message, max_tokens=300, temperature=0)
+            try:
+                box["out"] = agent.llm(sysmsg, message, max_tokens=300, temperature=0)
+            except Exception as e:  # no key / provider down: the keyword planner takes over
+                box["error"] = e
         box = {}
         try:
             th = threading.Thread(target=ask, daemon=True)
