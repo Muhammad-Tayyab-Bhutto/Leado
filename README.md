@@ -7,7 +7,7 @@
 [![PayPal Sandbox](https://img.shields.io/badge/PayPal-Sandbox-003087?logo=paypal&logoColor=white)](https://developer.paypal.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-![Dealwright: your whole software company, run by people and AI agents, on PayPal](demo/gallery/01-cover.png)
+![Dealwright: your whole software company, run by people and AI agents, on PayPal](docs/assets/cover.png)
 
 Agencies and B2B service teams lose deals in the gap between *"proposal sent"*
 and *"got paid"*. Proposals sit in PDFs, invoices go out days later, and nobody
@@ -216,7 +216,6 @@ pip install -r scripts/demo/requirements.txt     # plus google-chrome and ffmpeg
 # .env: PayPal sandbox keys, DEMO_PAYPAL_BUYER_EMAIL / _PASSWORD (a sandbox *Personal* account),
 #       DEMO_VOICE=/path/to/en_US-ryan-high.onnx (https://huggingface.co/rhasspy/piper-voices)
 scripts/demo/record.sh                          # -> demo/dealwright-demo.mp4 + .srt
-python scripts/demo/gallery.py                  # -> demo/gallery/*.png (1800x1200)
 ```
 
 ## Self-hosting on a VM
