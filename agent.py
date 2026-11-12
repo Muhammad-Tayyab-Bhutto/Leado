@@ -315,7 +315,7 @@ def llm(system, user, max_tokens=1500, temperature=0.2):
                         "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY', '')}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://softorasystems.com",
-                        "X-Title": "Softora CRM Vultr Edition"
+                        "X-Title": "Dealwright"
                     }
                 )
                 with urllib.request.urlopen(req, timeout=60) as r:
