@@ -36,9 +36,9 @@
      "say": "The client sees the proposal, and a PayPal button on every plan.",
      "actions": [{"do": "goto", "url": "{paylink}", "settle": 1.5}, {"do": "toast", "html": "👤 Client's view of the proposal", "ms": 2400}, {"do": "scroll_to", "text": "Choose your plan"}]},
 
-    {"id": "checkout", "pad": 0.2, "squeeze": 12,
+    {"id": "checkout", "pad": 0.2, "squeeze": 12, "fps": 2,
      "say": "They subscribe to the Growth plan and approve it in PayPal.",
-     "actions": [{"do": "click", "text": "Subscribe with PayPal"}, {"do": "paypal_approve", "return_pattern": "/return"}]},
+     "actions": [{"do": "click", "text": "Subscribe with PayPal"}, {"do": "paypal_approve", "return_pattern": "/return", "timeout": 480}]},
 
     {"id": "paid", "min": 3.2,
      "say": "The subscription is live.",
