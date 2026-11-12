@@ -186,10 +186,11 @@ routing of money actions to confirmations. No keys or network needed.
 
 ## Built during the PayPal hackathon
 
-This is an existing project that we substantially extended for this hackathon,
-as the rules allow. It started as an AI lead-generation CRM called "Dealwright"
-(discovery, research, proposals, sandboxed audits; first commit 2026-11-09).
-It had **no payment functionality**. During this hackathon we:
+The whole project was created during the submission period (first commit
+2026-11-09). It began as "Leado", an AI lead-generation CRM (discovery,
+research, proposals, sandboxed audits) that we first prototyped for the
+LabLab × Vultr Agent Rush hackathon. That prototype had **no payment
+functionality**. For this hackathon we:
 
 - **added the whole money side:** `paypal.py`, `paypal_web.py`, the PayPal
   Payments view, Wren's PayPal tools and LLM tool router, the AI collections
