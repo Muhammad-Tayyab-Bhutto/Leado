@@ -1,0 +1,66 @@
+{
+  "max_seconds": 175,
+  "vars": {"base": "http://localhost:8791", "token": "demo-recording-token-000000"},
+  "setup": [
+    {"do": "goto", "url": "{base}/"},
+    {"do": "eval", "js": "sessionStorage.setItem('t','demo-recording-token-000000')"},
+    {"do": "goto", "url": "{base}/", "settle": 2.5}
+  ],
+  "scenes": [
+    {"id": "hook", "min": 7,
+     "say": "Agencies lose deals in the gap between proposal sent and getting paid. Dealwright is an AI agent that closes that gap, end to end, on PayPal.",
+     "actions": [{"do": "card", "title": "Dealwright", "subtitle": "From first research to money in PayPal, with an AI agent and a human in the loop", "ms": 0}]},
+
+    {"id": "pipeline",
+     "say": "It finds and researches prospects. Every lead carries real evidence, quoted from the prospect's own website.",
+     "actions": [{"do": "uncard"}, {"do": "wait", "s": 0.6}, {"do": "click", "text": "FinFlow Payments"}, {"do": "wait_for", "text": "Opportunity / Audit Finding"}, {"do": "move", "text": "Opportunity / Audit Finding"}]},
+
+    {"id": "proposal",
+     "say": "One click, and the AI writes a scoped proposal with three pricing tiers, grounded in that evidence.",
+     "actions": [{"do": "click", "text": "Dealwright Proposal"}, {"do": "wait_for", "text": "Proposal generated successfully", "timeout": 60}, {"do": "wait", "s": 1.2}, {"do": "wait_for", "text": "View Full SOW", "timeout": 20}, {"do": "click", "text": "View Full SOW"}, {"do": "wait_for", "text": "Executive Summary"}, {"do": "wait", "s": 1.2}, {"do": "scroll_to", "text": "Commercial Investment"}]},
+
+    {"id": "paylink",
+     "say": "Then it becomes payable. One-time tiers use PayPal Orders. Monthly tiers become PayPal subscriptions, created on the fly.",
+     "actions": [{"do": "click", "text": "PayPal checkout link"}, {"do": "wait_for", "sel": "#paylink_out a"}, {"do": "move", "sel": "#paylink_out a"},
+                 {"do": "eval", "js": "document.querySelector('#paylink_out a').href", "save": "paylink"}]},
+
+    {"id": "client",
+     "say": "This is the client's view. The proposal, and a PayPal button on every plan.",
+     "actions": [{"do": "goto", "url": "{paylink}", "settle": 1.5}, {"do": "toast", "html": "👤 Client's view of the proposal", "ms": 2600}, {"do": "wait", "s": 1.0}, {"do": "scroll_to", "text": "Choose your plan"}]},
+
+    {"id": "checkout", "pad": 0.2, "squeeze": 5,
+     "say": "The client picks the monthly Growth plan, and approves it in PayPal.",
+     "actions": [{"do": "click", "text": "Subscribe with PayPal"}, {"do": "paypal_approve", "return_pattern": "/return"}]},
+
+    {"id": "paid",
+     "say": "The subscription is live.",
+     "actions": [{"do": "wait_for", "text": "subscription is active"}, {"do": "move", "text": "subscription is active"}]},
+
+    {"id": "won",
+     "say": "Back in the CRM, nobody typed anything. PayPal confirmed the payment, the deal moved to Won, and the monthly revenue was recorded.",
+     "actions": [{"do": "goto", "url": "{base}/", "settle": 2.5}, {"do": "click", "text": "FinFlow Payments"}, {"do": "wait_for", "text": "PayPal subscription activated", "timeout": 20}, {"do": "move", "text": "PayPal subscription activated"}]},
+
+    {"id": "ledger",
+     "say": "Every payment lands in a live ledger built with AG Grid. Filter it, sort it, and act right from the row.",
+     "actions": [{"do": "click", "sel": "[data-act=close]"}, {"do": "click", "sel": "[data-v=payments]"}, {"do": "wait_for", "sel": "#paygrid .ag-row"}, {"do": "move", "text": "active"}, {"do": "wait", "s": 0.8}, {"do": "move", "text": "Cancel"}]},
+
+    {"id": "wren_invoice",
+     "say": "Wren is the agent. I just ask in plain English. An LLM picks the PayPal tool, the client and the plan.",
+     "actions": [{"do": "click", "sel": "[data-v=copilot]"}, {"do": "wait_for", "sel": "#chat_in"},
+                 {"do": "type", "sel": "#chat_in", "text": "Invoice CloudPulse for the one-time sprint", "delay": 0.035},
+                 {"do": "click", "sel": "[data-act=send_chat]"}, {"do": "wait_for", "text": "Confirm: invoice", "timeout": 30}, {"do": "move", "text": "Confirm: invoice"}]},
+
+    {"id": "confirm",
+     "say": "But it never moves money on its own. I confirm, and PayPal sends the invoice.",
+     "actions": [{"do": "click", "text": "Confirm: invoice"}, {"do": "wait_for", "text": "sent for $", "timeout": 60}, {"do": "move", "text": "sent for $"}]},
+
+    {"id": "collections",
+     "say": "For anything unpaid, Wren drafts a reminder whose tone fits how overdue it is, and queues it for my approval.",
+     "actions": [{"do": "type", "sel": "#chat_in", "text": "Who still owes us money?", "delay": 0.035}, {"do": "click", "sel": "[data-act=send_chat]"},
+                 {"do": "wait_for", "text": "AI reminder for", "timeout": 30}, {"do": "click", "text": "AI reminder for"}, {"do": "wait_for", "text": "waiting in", "timeout": 40}, {"do": "move", "text": "waiting in"}]},
+
+    {"id": "close", "min": 9,
+     "say": "Dealwright. PayPal Orders, Subscriptions, Invoicing, Refunds and Webhooks, driven by AI, with a human in the loop.",
+     "actions": [{"do": "card", "title": "Dealwright", "subtitle": "PayPal Orders · Subscriptions · Invoicing · Refunds · Webhooks<br>AI agent (Claude via OpenRouter) · AG Grid · human-approved money moves<br><span style='color:#cbd5e1;font-size:24px'>github.com/Muhammad-Tayyab-Bhutto/Dealwright</span>", "ms": 0}]}
+  ]
+}

@@ -31,3 +31,8 @@ graphify-out/
 node_modules/
 .idea/
 .vscode/
+scripts/demo/.demo/
+demo/*.mp4
+demo/*.srt
+demo/server.log
+demo/raw-take.*
