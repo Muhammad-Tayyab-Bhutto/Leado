@@ -151,9 +151,11 @@ DEMO_LEADS = [
 ]
 
 DEMO_AI_AGENTS = [
-    {"name": "Forge", "kind": "ai_agent", "role": "Coding agent", "skills": "backend,python,automation,ai", "capacity": 4},
-    {"name": "Lens", "kind": "ai_agent", "role": "QA & audit agent", "skills": "qa,security,devops", "capacity": 4},
+    {"name": "Forge", "kind": "ai_agent", "role": "Coding agent", "department": "engineering", "skills": "backend,python,automation,ai", "capacity": 4},
+    {"name": "Lens", "kind": "ai_agent", "role": "QA & audit agent", "department": "qa", "skills": "qa,testing,automation", "capacity": 4},
 ]
+DEMO_DEPARTMENTS = {"Amina Shah": "marketing", "Leo Park": "sales", "Nora Iqbal": "sales", "Mateo Ruiz": "sales",
+                    "Priya Nair": "security", "Jonah Ellis": "sales"}
 
 
 def seed():
@@ -161,9 +163,15 @@ def seed():
     proposal_engine.init_proposals()
     import workforce, ops
     workforce.seed_demo_team()
+    import org
+    org.ensure()
     for agent_def in DEMO_AI_AGENTS:
         try: ops.add_member(agent_def)
         except ValueError: pass  # already seeded
+    with app.conn() as c:
+        for name, dept in DEMO_DEPARTMENTS.items():
+            c.execute("update team_members set department=? where name=? and department is null", (dept, name))
+    org.staff_with_ai()  # AI agents cover every department that has nobody yet
     
     for l in DEMO_LEADS:
         try:

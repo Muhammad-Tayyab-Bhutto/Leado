@@ -10,7 +10,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import app, agent, sandbox, proposal_engine, copilot, workforce, growth, paypal, paypal_web, ops
+import app, agent, sandbox, proposal_engine, copilot, workforce, growth, paypal, paypal_web, ops, org
 from app import conn, STATUSES, SERVICES, now
 
 TOKEN = os.environ.get("SOFTORASYSTEMS_TOKEN", "")
@@ -38,6 +38,7 @@ def migrate():
     workforce.ensure()
     growth.ensure()
     paypal.ensure()
+    org.ensure()
 
 def g(q, k): return (q.get(k) or [""])[0].strip()
 def log(c, i, kind, detail=""): c.execute("insert into events(lead_id,kind,detail,at) values(?,?,?,?)", (i, kind, str(detail)[:500], now()))
@@ -345,6 +346,27 @@ def project_get(q, b, i): return ops.get_project(i)
 
 @route("PATCH", "/api/projects/(\\d+)")
 def project_patch(q, b, i): return ops.update_project(i, b)
+
+@route("GET", "/api/org")
+def org_overview(q, b): return org.overview()
+
+@route("POST", "/api/org/staff-ai")
+def org_staff(q, b): return org.staff_with_ai(b.get("departments") or None)
+
+@route("GET", "/api/projects/(\\d+)/tasks")
+def project_tasks(q, b, i): return {"items": org.list_tasks(i)}
+
+@route("POST", "/api/projects/(\\d+)/plan")
+def project_plan(q, b, i): return org.plan_project(i)
+
+@route("POST", "/api/projects/(\\d+)/run-agents")
+def project_run_agents(q, b, i): return org.run_all(i)
+
+@route("POST", "/api/tasks/(\\d+)/run")
+def task_run(q, b, i): return org.run_task(i)
+
+@route("PATCH", "/api/tasks/(\\d+)")
+def task_patch(q, b, i): return org.update_task(i, b)
 
 @route("GET", "/api/paypal/status")
 def paypal_status(q, b): return paypal.status()

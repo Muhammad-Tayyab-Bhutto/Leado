@@ -92,6 +92,12 @@ def _date(v, name):
     try: return date.fromisoformat(str(v)).isoformat()
     except ValueError: raise ValueError(f"{name} must be YYYY-MM-DD")
 
+def _department(v):
+    if v in (None, ""): return None
+    import org
+    if v not in org.DEPT: raise ValueError("unknown department")
+    return v
+
 def _log(c, pid, kind, detail):
     c.execute("insert into project_events(project_id,kind,detail,at) values(?,?,?,?)", (pid, kind, str(detail)[:500], now()))
 
@@ -120,6 +126,16 @@ def list_members(include_inactive=False) -> List[Dict[str, Any]]:
                                                          "due": p["due"], "client": p["company"]})
         queued = {r[0]: r[1] for r in c.execute("select assignee_id, count(*) from projects where status='queued' "
                                                  "and assignee_id is not null group by assignee_id")}
+        has_tasks = c.execute("select 1 from sqlite_master where type='table' and name='project_tasks'").fetchone()
+        if has_tasks:
+            for t in c.execute("""select t.assignee_id, t.title, t.status, p.name as project, p.due, l.company from project_tasks t
+                                  join projects p on p.id=t.project_id left join leads l on l.id=p.lead_id
+                                  where t.status in ('running','review') and t.assignee_id is not null order by t.id"""):
+                work.setdefault(t["assignee_id"], []).append({"id": None, "name": f"{t['title']} · {t['project']}",
+                                                             "status": "awaiting review" if t["status"] == "review" else "running",
+                                                             "due": t["due"], "client": t["company"]})
+            for aid, n in c.execute("select assignee_id, count(*) from project_tasks where status='todo' and assignee_id is not null group by assignee_id"):
+                queued[aid] = queued.get(aid, 0) + n
     for m in rows:
         m["kind"] = m.get("kind") or "human"
         m["working_on"] = work.get(m["id"], [])
@@ -139,6 +155,7 @@ def add_member(b: Dict[str, Any]) -> Dict[str, Any]:
     email = _text(b.get("email"), "email", 254)
     if email and not EMAIL_RE.match(email): raise ValueError("invalid email")
     cap = _int(b.get("capacity", DEFAULT_CAPACITY[kind]), "capacity", 1, 50)
+    dept = _department(b.get("department"))
     with conn() as c:
         if c.execute("select 1 from team_members where lower(name)=lower(?) and coalesce(active,1)=1", (name,)).fetchone():
             raise ValueError(f"an active member named '{name}' already exists")
@@ -146,6 +163,7 @@ def add_member(b: Dict[str, Any]) -> Dict[str, Any]:
                   "values(?,?,?,?,?,?,?,?,?,?)", (name, role, _skills(b.get("skills")), email.lower() or None, cap, "available",
                                                   kind, 1, cap, now()))
         mid = c.execute("select last_insert_rowid()").fetchone()[0]
+        if dept: c.execute("update team_members set department=? where id=?", (dept, mid))
     return get_member(mid)
 
 def get_member(mid: int) -> Dict[str, Any]:
@@ -168,6 +186,8 @@ def update_member(mid: int, b: Dict[str, Any]) -> Dict[str, Any]:
     if "status" in b:
         if b["status"] not in ("available", "away"): raise ValueError("status must be 'available' or 'away'")
         sets.append("status=?"); args.append(b["status"])
+    if "department" in b:
+        sets.append("department=?"); args.append(_department(b["department"]))
     if "active" in b:
         if not isinstance(b["active"], bool): raise ValueError("active must be true or false")
         sets.append("active=?"); args.append(int(b["active"]))
@@ -187,7 +207,12 @@ def update_member(mid: int, b: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _project_rows(c, where="1=1", args=()):
-    rows = c.execute(f"""select p.*, l.company, m.name as assignee_name, m.kind as assignee_kind
+    has_tasks = c.execute("select 1 from sqlite_master where type='table' and name='project_tasks'").fetchone()
+    counts = ("(select count(*) from project_tasks t where t.project_id=p.id) as tasks_total, "
+              "(select count(*) from project_tasks t where t.project_id=p.id and t.status='done') as tasks_done, "
+              "(select count(*) from project_tasks t where t.project_id=p.id and t.status='review') as tasks_review, "
+              if has_tasks else "0 as tasks_total, 0 as tasks_done, 0 as tasks_review, ")
+    rows = c.execute(f"""select p.*, {counts} l.company, m.name as assignee_name, m.kind as assignee_kind
                          from projects p left join leads l on l.id=p.lead_id left join team_members m on m.id=p.assignee_id
                          where {where} order by case p.status when 'in_progress' then 0 when 'review' then 1 when 'queued' then 2
                          when 'on_hold' then 3 else 4 end, case p.priority when 'urgent' then 0 when 'high' then 1 when 'normal' then 2 else 3 end,
@@ -237,6 +262,9 @@ def create_project(b: Dict[str, Any]) -> Dict[str, Any]:
                    b.get("value"), _date(b.get("due"), "due"), now(), now()))
         pid = c.execute("select last_insert_rowid()").fetchone()[0]
         _log(c, pid, "created", "Project created by admin")
+        if b.get("plan", True):
+            import org
+            org.plan_in(c, pid)
     return get_project(pid)
 
 def update_project(pid: int, b: Dict[str, Any]) -> Dict[str, Any]:
@@ -315,8 +343,10 @@ SERVICE_SKILLS = {"web_app": "frontend,backend", "saas": "backend,saas", "mobile
                   "cro": "frontend,analytics", "devops": "devops,security"}
 
 def project_from_payment(c, pay: Dict[str, Any]):
-    """Called inside paypal.settle(): queue a delivery project for a newly paid deal (idempotent)."""
-    c.executescript(SCHEMA)
+    """Called inside paypal.settle(): queue a delivery project for a newly paid deal (idempotent).
+    Uses only c.execute: executescript() would commit the caller's open transaction."""
+    for stmt in filter(str.strip, SCHEMA.split(";")):
+        c.execute(stmt)
     if c.execute("select 1 from projects where payment_id=?", (pay["id"],)).fetchone(): return
     lead = c.execute("select company, service from leads where id=?", (pay["lead_id"],)).fetchone()
     company = lead["company"] if lead else "Client"
@@ -328,6 +358,8 @@ def project_from_payment(c, pay: Dict[str, Any]):
                pay["lead_id"], pay["id"], skills, "high", pay["amount"], now(), now()))
     pid = c.execute("select last_insert_rowid()").fetchone()[0]
     _log(c, pid, "created", f"Queued from PayPal payment {pay['paypal_id']}")
+    import org
+    org.plan_in(c, pid)  # the Project Manager agent routes lifecycle work to departments
 
 def summary() -> Dict[str, Any]:
     members, projects = list_members(), list_projects()
