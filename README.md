@@ -38,6 +38,28 @@ never moves money on its own. Invoices, refunds and cancellations come back as
 confirmation buttons, and the API rejects them without `confirm: true`.
 Reminder emails go through the existing human-approval and suppression gates.
 
+## Company: 20 departments, people and AI agents, one lifecycle
+
+Dealwright models a full software house: **20 departments** in four pillars (Revenue, Delivery, Operations, Product & R&D), from Sales, Marketing and Pre-Sales through Engineering, Design, QA, DevOps and Cybersecurity, to Finance, HR, Legal and Customer Success. Each department is staffed by people, AI agents, or both, and shows live KPIs: sales conversion, PayPal collections and MRR, active and overdue projects, and task throughput.
+
+**Client-to-delivery lifecycle.** When PayPal confirms a payment, the Project Manager agent plans nine stages and routes each one to the department that owns it:
+
+| # | Stage | Department |
+|---|---|---|
+| 1 | Requirement analysis & estimate | Business Analysis & Pre-Sales |
+| 2 | Sprint plan & milestones | Project & Program Management |
+| 3 | UX flows & wireframe spec | UI/UX & Product Design |
+| 4 | Architecture & API plan | Software Engineering |
+| 5 | Test plan & acceptance criteria | Quality Assurance |
+| 6 | Security review checklist | Cybersecurity |
+| 7 | Deployment & monitoring runbook | DevOps & Cloud |
+| 8 | Client handover & success plan | Customer Support & Success |
+| 9 | Milestone billing plan | Finance & Accounting |
+
+Tasks owned by AI agents run in parallel, with bounded concurrency. Each agent writes its department's deliverable for this specific client using the LLM, and the task waits for **human approval**. Tasks owned by people stay with them. When the LLM is unavailable, the agent produces a clearly labelled template and records the reason. **Agents write plans and documents; they do not ship code or move money.**
+
+`POST /api/org/staff-ai` fills empty departments with AI agents. Real staff are added from Team & Projects with a department.
+
 ## Team & Projects: run the delivery side of a software company
 
 Sales and money are only half of a services company. The **Team & Projects** view is the admin console for delivery:
@@ -113,6 +135,7 @@ Deploy with **Render**: `render.yaml` is a ready Blueprint. Set
 | `crm.py` | HTTP server and REST API. Public routes are only `/`, `/pay/<token>…` and `/api/paypal/webhook` |
 | `proposal_engine.py` | SOW plus pricing tiers (now with numeric `amount` / `interval` for PayPal) |
 | `agent.py` | LLM client (OpenRouter / Vultr) with a circuit breaker and daily cap |
+| `org.py` | 20-department company model, lifecycle planning, department AI agents, KPIs |
 | `ops.py` | Team roster (people and AI agents), project queue, availability, auto-assign, PayPal → project hook |
 | `ui.html` | Single-page CRM: pipeline, proposals, **PayPal Payments**, **Team & Projects**, Wren |
 | `app.py`, `lead_finder/`, `sandbox.py`, `growth.py`, `workforce.py` | Discovery, scoring, sandboxed audits, outreach |
@@ -133,6 +156,10 @@ Deploy with **Render**: `render.yaml` is a ready Blueprint. Set
 | `GET/POST /api/team`, `PATCH /api/team/{id}` | bearer | Roster of people and AI agents; availability, away, deactivate |
 | `GET/POST /api/projects`, `GET/PATCH /api/projects/{id}` | bearer | Delivery projects: status, assignee, priority, due |
 | `POST /api/projects/auto-assign` | bearer | Skill- and capacity-based assignment, with a reason for each decision |
+| `GET /api/org`, `POST /api/org/staff-ai` | bearer | Departments, staffing and KPIs; staff empty departments with AI agents |
+| `GET /api/projects/{id}/tasks`, `POST /api/projects/{id}/plan` | bearer | The 9-stage lifecycle of a project |
+| `POST /api/projects/{id}/run-agents`, `POST /api/tasks/{id}/run` | bearer | AI agents write their deliverables (then wait for approval) |
+| `PATCH /api/tasks/{id}` | bearer | Approve (`done`), block, or reassign a task |
 
 ## Responsible by design
 
