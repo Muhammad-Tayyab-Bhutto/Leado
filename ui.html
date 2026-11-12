@@ -273,6 +273,9 @@
       border-color: var(--bad)
     }
 
+    details.card > summary { list-style: none; cursor: pointer; display: block }
+    details.card > summary::-webkit-details-marker { display: none }
+    details.card[open] > summary { margin-bottom: 4px }
     #paygrid button { padding: 4px 10px; font-size: 12px; line-height: 1.2; margin: 0 2px 0 0; min-height: 0; vertical-align: middle }
     #paygrid .bd { padding: 2px 9px; line-height: 1.5; display: inline-block; vertical-align: middle }
     #paygrid .ag-cell { display: flex; align-items: center }
@@ -1183,6 +1186,12 @@
         <rect x="2" y="5" width="20" height="14" rx="2" />
         <line x1="2" y1="10" x2="22" y2="10" />
       </svg>PayPal Payments</button>
+    <button class="nav" data-act="view" data-v="ops"><svg class="ic" viewBox="0 0 24 24">
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+        <rect x="15" y="4" width="6" height="6" rx="1" />
+        <line x1="16" y1="15" x2="21" y2="15" /><line x1="16" y1="19" x2="21" y2="19" />
+      </svg>Team &amp; Projects</button>
     <button class="nav" data-act="view" data-v="copilot"><svg class="ic" viewBox="0 0 24 24">
         <path
           d="M12 2a8 8 0 0 0-8 8c0 3 2 5.5 5 7.2V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2.8c3-1.7 5-4.2 5-7.2a8 8 0 0 0-8-8z" />
@@ -1272,7 +1281,7 @@
     const opts = (a, sel, all) => `<option value="">${all}</option>` + a.map(v => `<option ${v === sel ? 'selected' : ''} value="${esc(v)}">${nice(v)}</option>`).join('');
 
     function bar() {
-      if (['approvals', 'lead_finder', 'proposals', 'payments', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
+      if (['approvals', 'lead_finder', 'proposals', 'payments', 'ops', 'sandbox', 'copilot', 'voice', 'growth'].includes(V)) { $('#bar').innerHTML = ''; return }
       $('#bar').innerHTML = `<input id="q" placeholder="Search company, domain, contact" value="${esc(F.q)}" style="width:230px">
   <select data-f="country">${opts(FAC.country, F.country, 'All countries')}</select><select data-f="industry">${opts(FAC.industry, F.industry, 'All industries')}</select>
   <select data-f="service">${opts(FAC.service, F.service, 'All services')}</select><select data-f="status">${opts(ST, F.status, 'All statuses')}</select>
@@ -1304,6 +1313,7 @@
       if (V === 'bulk') { bulkRefresh(); return }
       if (V === 'proposals') { proposalsRefresh(); return }
       if (V === 'payments') { paymentsRefresh(); return }
+      if (V === 'ops') { opsRefresh(); return }
       if (V === 'sandbox') { sandboxRefresh(); return }
       if (V === 'copilot') { copilotRefresh(); return }
       if (V === 'voice') { voiceRefresh(); return }
@@ -1404,6 +1414,74 @@
       } catch (e) {
         $('#content').innerHTML = empty('Could not load payments', esc(e.message));
       }
+    }
+
+    // ---- Team & Projects (admin) ----
+    const AV = { free: ['ge', 'Free'], busy: ['gb', 'Busy'], at_capacity: ['gd', 'At capacity'], away: ['ga', 'Away'], inactive: ['gf', 'Inactive'] };
+    const PRI = { urgent: 'gf', high: 'gd', normal: 'gb', low: 'ga' };
+    const PCOLS = [['queued', 'Queued'], ['in_progress', 'In progress'], ['review', 'Review'], ['done', 'Done']];
+    const NEXT = { queued: [['in_progress', 'Start ▶']], in_progress: [['review', 'Send to review'], ['queued', '↩ Queue']], review: [['done', 'Mark done ✓'], ['in_progress', '↩ Rework']], done: [], on_hold: [['queued', 'Resume']] };
+    let OPS = { team: [], projects: [] };
+    async function opsRefresh() {
+      $('#bar').innerHTML = ''; $('#pager').innerHTML = ''; $('#title').textContent = 'Team & Projects'; $('#content').innerHTML = skel();
+      try {
+        const [t, p] = await Promise.all([api('/api/team'), api('/api/projects')]);
+        OPS = { team: t.items, projects: p.items }; const s = p.summary;
+        $('#stats').innerHTML = [['Free', s.free], ['Busy', s.busy], ['At capacity', s.at_capacity], ['Away', s.away],
+          ['Queued', `${s.queued}<span class="m" style="font-size:12px"> · ${s.unassigned_queued} unassigned</span>`],
+          ['In progress', s.in_progress], ['In review', s.review], ['Overdue', s.overdue], ['People', s.humans], ['AI agents', s.ai_agents]]
+          .map(([l, v]) => `<div class="card"><span class="m">${l}</span><b>${v}</b></div>`).join('');
+        const opts = sel => `<option value="">Unassigned</option>` + OPS.team.map(m => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.name)}${m.kind === 'ai_agent' ? ' 🤖' : ''} · ${esc(AV[m.availability][1])}</option>`).join('');
+        const card = p => `<div class="kc" style="cursor:default">
+            <div style="display:flex;justify-content:space-between;gap:6px"><b>${esc(p.name)}</b><span class="bd ${PRI[p.priority]}">${esc(p.priority)}</span></div>
+            <div class="m">${esc(p.company || 'Internal')}${p.value ? ' · ' + money(p.value) : ''}${p.due ? ` · <span style="${p.overdue ? 'color:var(--bad);font-weight:700' : ''}">due ${esc(p.due)}${p.overdue ? ' ⚠' : ''}</span>` : ''}</div>
+            ${p.skills_list.length ? `<div class="m" style="margin-top:4px">${p.skills_list.map(esc).join(' · ')}</div>` : ''}
+            <select data-assign="${p.id}" style="margin-top:8px;width:100%" ${p.status === 'done' ? 'disabled' : ''}>${opts(p.assignee_id)}</select>
+            <div class="bt" style="margin-top:6px">${(NEXT[p.status] || []).map(([st, l]) => `<button data-act="ops_move" data-id="${p.id}" data-st="${st}">${l}</button>`).join('')}</div>
+          </div>`;
+        const board = PCOLS.map(([st, label]) => { const L = OPS.projects.filter(p => p.status === st || (st === 'queued' && p.status === 'on_hold'));
+          return `<div class="col" style="flex:1 1 0;min-width:230px"><h4><span>${label}</span><span>${L.length}</span></h4>${L.map(card).join('') || '<span class="m">Nothing here</span>'}</div>` }).join('');
+        const rows = OPS.team.map(m => `<tr>
+            <td><b>${esc(m.name)}</b> ${m.kind === 'ai_agent' ? '<span class="bd gc">AI agent</span>' : ''}<div class="m">${esc(m.email || '')}</div></td>
+            <td>${esc(m.role || '')}<div class="m">${m.skills_list.map(esc).join(', ')}</div></td>
+            <td><span class="bd ${AV[m.availability][0]}">${AV[m.availability][1]}</span></td>
+            <td>${m.working_on.length ? m.working_on.map(w => `<div><b>${esc(w.name)}</b> <span class="m">${esc(w.status.replace('_', ' '))}</span></div>`).join('') : '<span class="m">—</span>'}${m.queued_projects ? `<div class="m">+${m.queued_projects} queued</div>` : ''}</td>
+            <td>${m.active_projects}/${m.capacity_projects}</td>
+            <td style="white-space:nowrap"><button data-act="ops_away" data-id="${m.id}" data-st="${m.status === 'away' ? 'available' : 'away'}">${m.status === 'away' ? 'Mark available' : 'Mark away'}</button>
+              <button data-act="ops_deactivate" data-id="${m.id}" data-name="${esc(m.name)}">Deactivate</button></td></tr>`).join('');
+        $('#content').innerHTML = `
+          <div class="bt" style="margin:0 0 12px">
+            <button class="accent" data-act="ops_auto">⚡ Auto-assign queue</button>
+            <span class="m">Matches each unassigned project to the free member (person or AI agent) with the best skill match and spare capacity.</span>
+          </div>
+          <div id="ops_auto_out"></div>
+          <h3 style="margin:6px 0 8px">Projects</h3>
+          <div class="board">${board}</div>
+          <details class="card" style="margin:12px 0"><summary><b>＋ New project</b></summary>
+            <div class="grid2" style="margin-top:10px">
+              <div><label>Name</label><input id="np_name" placeholder="Client portal v2"></div>
+              <div><label>Skills needed</label><input id="np_skills" placeholder="frontend, react"></div>
+              <div><label>Priority</label><select id="np_pri"><option>normal</option><option>high</option><option>urgent</option><option>low</option></select></div>
+              <div><label>Due</label><input id="np_due" type="date"></div>
+              <div><label>Assignee</label><select id="np_who">${opts(null)}</select></div>
+              <div><label>Value (USD)</label><input id="np_value" type="number" min="0" placeholder="optional"></div>
+            </div>
+            <div class="bt"><button class="pri" data-act="ops_add_project">Create project</button></div>
+          </details>
+          <h3 style="margin:16px 0 8px">Team <span class="m">(${OPS.team.length})</span></h3>
+          ${OPS.team.length ? `<div class="tw"><table><thead><tr><th>Member<th>Role & skills<th>Status<th>Working on<th>Load<th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('No team yet', 'Add your first employee or AI agent below.')}
+          <details class="card" style="margin-top:12px" ${OPS.team.length ? '' : 'open'}><summary><b>＋ Add employee or AI agent</b></summary>
+            <div class="grid2" style="margin-top:10px">
+              <div><label>Name</label><input id="nm_name" placeholder="Ayesha Malik"></div>
+              <div><label>Type</label><select id="nm_kind"><option value="human">Employee</option><option value="ai_agent">AI agent</option></select></div>
+              <div><label>Role</label><input id="nm_role" placeholder="Senior Flutter Developer"></div>
+              <div><label>Skills</label><input id="nm_skills" placeholder="mobile, flutter, firebase"></div>
+              <div><label>Email</label><input id="nm_email" placeholder="optional"></div>
+              <div><label>Project capacity</label><input id="nm_cap" type="number" min="1" max="50" placeholder="2 for people, 5 for agents"></div>
+            </div>
+            <div class="bt"><button class="pri" data-act="ops_add_member">Add member</button></div>
+          </details>`;
+      } catch (e) { $('#content').innerHTML = empty('Could not load team & projects', esc(e.message)) }
     }
 
     async function proposalsRefresh() {
@@ -1961,6 +2039,41 @@
         } catch (e) { toast(e.message, 1) }
       },
 
+      // ---- TEAM & PROJECTS ACTIONS ----
+      async ops_add_member() {
+        const v = id => $('#' + id).value.trim(), cap = v('nm_cap');
+        try {
+          const m = await api('/api/team', { method: 'POST', body: { name: v('nm_name'), kind: v('nm_kind'), role: v('nm_role'), skills: v('nm_skills'), email: v('nm_email'), ...(cap ? { capacity: +cap } : {}) } });
+          toast(`${m.name} added as ${m.kind === 'ai_agent' ? 'an AI agent' : 'an employee'}`); opsRefresh();
+        } catch (e) { toast(e.message, 1) }
+      },
+      async ops_add_project() {
+        const v = id => $('#' + id).value.trim(), who = v('np_who'), val = v('np_value');
+        try {
+          const p = await api('/api/projects', { method: 'POST', body: { name: v('np_name'), skills: v('np_skills'), priority: v('np_pri'), due: v('np_due') || null, ...(who ? { assignee_id: +who } : {}), ...(val ? { value: +val } : {}) } });
+          toast(`Project "${p.name}" queued`); opsRefresh();
+        } catch (e) { toast(e.message, 1) }
+      },
+      async ops_move(t) {
+        try { await api(`/api/projects/${t.dataset.id}`, { method: 'PATCH', body: { status: t.dataset.st } }); opsRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      async ops_away(t) {
+        try { await api(`/api/team/${t.dataset.id}`, { method: 'PATCH', body: { status: t.dataset.st } }); opsRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      async ops_deactivate(t) {
+        if (!confirm(`Deactivate ${t.dataset.name}? Their active and queued projects go back to the queue. History is kept.`)) return;
+        try { await api(`/api/team/${t.dataset.id}`, { method: 'PATCH', body: { active: false } }); toast(`${t.dataset.name} deactivated`); opsRefresh() } catch (e) { toast(e.message, 1) }
+      },
+      async ops_auto() {
+        try {
+          const r = await api('/api/projects/auto-assign', { method: 'POST', body: {} });
+          const lines = r.assigned.map(a => `✅ <b>${esc(a.project)}</b> → ${esc(a.member)}${a.kind === 'ai_agent' ? ' 🤖' : ''} <span class="m">(${esc(a.reason)})</span>`)
+            .concat(r.skipped.map(s => `⏸ <b>${esc(s.project)}</b> <span class="m">${esc(s.reason)}</span>`));
+          await opsRefresh();
+          $('#ops_auto_out').innerHTML = `<div class="pv" style="margin-bottom:12px">${lines.join('<br>') || 'Nothing to assign: every queued project already has an owner.'}</div>`;
+        } catch (e) { toast(e.message, 1) }
+      },
+
       // ---- PAYPAL ACTIONS ----
       async paylink(t) {
         try {
@@ -2268,6 +2381,11 @@
       if (e.key === 'Enter' && e.target.id === 'voice_in') ACT.voice_send();
     });
     document.addEventListener('change', e => { const k = e.target.dataset.f; if (k) { F[k] = e.target.value; F.page = 1; refresh() } });
+    document.addEventListener('change', async e => {
+      const pid = e.target.dataset.assign; if (!pid) return;
+      try { await api(`/api/projects/${pid}`, { method: 'PATCH', body: { assignee_id: e.target.value ? +e.target.value : null } }); toast('Assignment updated'); opsRefresh() }
+      catch (x) { toast(x.message, 1); opsRefresh() }
+    });
     document.addEventListener('dragstart', e => { const c = e.target.closest('.kc'); if (c) e.dataTransfer.setData('text/plain', c.dataset.id) });
     document.addEventListener('dragover', e => { const c = e.target.closest('.col'); if (c) { e.preventDefault(); c.classList.add('over') } });
     document.addEventListener('dragleave', e => { const c = e.target.closest('.col'); c && c.classList.remove('over') });
