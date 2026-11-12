@@ -217,6 +217,21 @@ def _template(stage, ctx, reason=""):
             f"- Value: {'$' + format(int(ctx['value_usd']), ',') if ctx['value_usd'] else 'n/a'}\n\n"
             f"_Template draft: the LLM was unavailable{' (' + reason + ')' if reason else ''}. Re-run the agent for an AI-written deliverable._")
 
+def _unwrap(text):
+    """Models sometimes return the JSON envelope with raw newlines inside the string, which strict JSON
+    rejects. Recover the deliverable instead of showing the envelope to the user."""
+    if not isinstance(text, str): return text
+    t = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    if not t.startswith("{") or '"deliverable"' not in t: return text
+    try:
+        return json.loads(t, strict=False).get("deliverable") or text
+    except ValueError:
+        m = re.search(r'"deliverable"\s*:\s*"(.*?)(?:"\s*}?\s*)?$', t, re.S)  # closing quote optional: output may be cut off
+        if not m: return text
+        try: return json.loads('"' + m.group(1) + '"', strict=False)
+        except ValueError: return m.group(1).replace("\\n", "\n").replace('\\"', '"')
+
+
 def run_task(tid: int) -> Dict[str, Any]:
     """An AI agent produces its department's deliverable. The task then waits for human approval."""
     ensure()
@@ -237,7 +252,7 @@ def run_task(tid: int) -> Dict[str, Any]:
                   'Return JSON only: {"deliverable": "<markdown>"}')
         # generous budget: reasoning models spend tokens thinking before they answer
         out = agent.llm(sysmsg, json.dumps(ctx, default=str), max_tokens=2000, temperature=0.3)
-        body = (out.get("deliverable") or out.get("raw_response")) if isinstance(out, dict) else None
+        body = (out.get("deliverable") or _unwrap(out.get("raw_response"))) if isinstance(out, dict) else None
         if body and str(body).strip() and str(body).strip() != "None":
             text, source = str(body).strip()[:6000], "ai"
         else:

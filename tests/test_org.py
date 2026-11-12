@@ -100,6 +100,12 @@ class OrgTests(unittest.TestCase):
             self.assertEqual(c.execute("select status from payments where paypal_id='ORD-ORG-1'").fetchone()[0], "completed")
         self.assertEqual(org.overview()["departments"][15]["id"], "finance")
 
+    def test_deliverable_envelope_is_unwrapped(self):
+        self.assertEqual(org._unwrap('{"deliverable": "**Plan**\n- a"}'), "**Plan**\n- a")  # raw newline inside string
+        self.assertEqual(org._unwrap('```json\n{"deliverable": "**A**"}\n```'), "**A**")
+        self.assertEqual(org._unwrap('{"deliverable": "**Cut**\\n- off'), "**Cut**\n- off")  # truncated output
+        self.assertEqual(org._unwrap("plain markdown"), "plain markdown")
+
 
 if __name__ == "__main__":
     unittest.main()
