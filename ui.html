@@ -2119,7 +2119,8 @@
       async proj_plan(t) { try { await api(`/api/projects/${t.dataset.id}/plan`, { method: 'POST', body: {} }); openProject(t.dataset.id) } catch (e) { toast(e.message, 1) } },
       async proj_run_all(t) {
         t.disabled = true; t.textContent = '⏳ Department agents are working…';
-        document.querySelectorAll('#drawer .bd.ga').forEach(b => { if (b.textContent === 'To do') { b.className = 'bd gb'; b.textContent = 'Agent working…' } });
+        // only tasks an AI agent will run (they carry a "Run agent" button); people's tasks stay as they are
+        document.querySelectorAll('#drawer [data-act=task_run]').forEach(btn => { const b = btn.closest('.card').querySelector('.bd'); if (b) { b.className = 'bd gb'; b.textContent = 'Agent working…' } btn.remove() });
         try { const r = await api(`/api/projects/${t.dataset.id}/run-agents`, { method: 'POST', body: {} }); toast(`${r.ran} deliverables ready for your approval`) } catch (e) { toast(e.message, 1) }
         openProject(t.dataset.id); if (V === 'ops') opsRefresh();
       },
