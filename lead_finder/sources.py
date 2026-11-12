@@ -12,7 +12,7 @@ from .config import (
 )
 from .http_utils import http_get, can_fetch, extract_emails, extract_phone_numbers, clean_text
 from .database import log_discovery
-from .stealth import (
+from .politeness import (
     ua_manager, proxy_manager, rate_limiter, header_manager, 
     behavior_simulator, captcha_detector, human_like_delay
 )
@@ -27,10 +27,10 @@ class LeadSource:
         self.source_type = "base"
         self.robots_cache = {}
         self.user_agent = None
-        self.use_stealth = True
+        self.use_politeness = True
     
     def _get_headers(self, url: str = None) -> dict:
-        """Get headers with stealth"""
+        """Polite, honest request headers"""
         if self.user_agent:
             return header_manager.get_headers_for_url(url, self.user_agent)
         return header_manager.get_headers_for_url(url)
@@ -43,17 +43,17 @@ class LeadSource:
     
     def _apply_rate_limiting(self):
         """Apply rate limiting before request"""
-        if self.use_stealth:
+        if self.use_politeness:
             rate_limiter.wait()
     
     def _apply_human_delay(self):
         """Apply human-like delay"""
-        if self.use_stealth:
+        if self.use_politeness:
             time.sleep(human_like_delay(0.5))
     
     def _check_captcha(self, html: str, url: str, headers: dict = None, status_code: int = None):
         """Check for CAPTCHA and attempt to solve"""
-        if self.use_stealth:
+        if self.use_politeness:
             detection = detect_captcha(html, headers, url, status_code)
             if detection["detected"]:
                 success, result = solver_manager.solve(html, url, headers, status_code)
@@ -64,7 +64,7 @@ class LeadSource:
     
     def _get_proxy(self):
         """Get proxy URL if configured"""
-        if self.use_stealth and proxy_manager.enabled:
+        if self.use_politeness and proxy_manager.enabled:
             return proxy_manager.get_proxy_url()
         return None
     
@@ -172,7 +172,7 @@ class GoogleSearchSource(LeadSource):
                     # Apply rate limiting
                     self._apply_rate_limiting()
                     
-                    # Get with stealth
+                    # Polite fetch
                     headers = self._get_headers(search_url)
                     
                     # Try with JavaScript rendering for better results

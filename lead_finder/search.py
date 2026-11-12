@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from .config import UA, SERPAPI_KEY, RATE_LIMIT_DELAY, domain_of
-from .stealth import ua_manager, proxy_manager, rate_limiter, header_manager, behavior_simulator
+from .politeness import ua_manager, proxy_manager, rate_limiter, header_manager, behavior_simulator
 from .database import log_discovery
 from .http_utils import http_get, http_post, clean_text
 from .javascript import render_page, js_renderer

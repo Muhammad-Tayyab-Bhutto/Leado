@@ -3,9 +3,9 @@ Integration Tests for Advanced Web Scraping Modules
 
 This module tests:
 1. JavaScript rendering capabilities
-2. CAPTCHA detection and solving
+2. CAPTCHA detection (detect-and-skip; never solved)
 3. Search engine scraping
-4. Stealth techniques
+4. Polite crawling (honest UA, no proxies, rate limits)
 5. Integration with existing lead finder
 """
 import os
@@ -48,7 +48,8 @@ class TestJavaScriptRenderer(unittest.TestCase):
     def test_extract_json_from_page(self):
         """Test JSON extraction from HTML"""
         html = '<script type="application/json">{"test": "data"}</script>'
-        json_data = self.renderer.extract_json_from_page(html)
+        with patch.object(self.renderer, "render", return_value=(html, {})):  # offline: no real fetch
+            json_data = self.renderer.extract_json_from_page("https://example.com")
         self.assertEqual(len(json_data), 1)
         self.assertEqual(json_data[0]["test"], "data")
     
@@ -128,61 +129,35 @@ class TestSearchQueryBuilder(unittest.TestCase):
         self.assertIn("OR", query)
 
 
-class TestStealthIntegration(unittest.TestCase):
-    """Test stealth technique integration"""
-    
+class TestPoliteCrawling(unittest.TestCase):
+    """The crawler must identify itself honestly and never evade blocks."""
+
     def setUp(self):
-        from lead_finder.stealth import (
-            ua_manager, proxy_manager, rate_limiter, header_manager,
-            behavior_simulator, get_random_user_agent, get_stealth_headers
-        )
-        self.ua_manager = ua_manager
-        self.proxy_manager = proxy_manager
-        self.rate_limiter = rate_limiter
-        self.header_manager = header_manager
-        self.behavior_simulator = behavior_simulator
-    
-    def test_user_agent_rotation(self):
-        """Test user agent rotation"""
-        ua1 = self.ua_manager.get_agent()
-        ua2 = self.ua_manager.get_agent()
-        self.assertNotEqual(ua1, ua2)
-    
-    def test_random_user_agent(self):
-        """Test random user agent selection"""
-        ua = self.ua_manager.get_random_agent()
-        self.assertIsNotNone(ua)
-        self.assertIn("Mozilla", ua or "Chrome", ua or "Firefox", ua)
-    
-    def test_browser_specific_ua(self):
-        """Test browser-specific user agent"""
-        chrome_ua = self.ua_manager.get_agent_for_browser("chrome")
-        firefox_ua = self.ua_manager.get_agent_for_browser("firefox")
-        
-        self.assertIn("Chrome", chrome_ua)
-        self.assertIn("Firefox", firefox_ua)
-    
-    def test_headers_generation(self):
-        """Test HTTP headers generation"""
-        headers = self.header_manager.get_headers()
-        self.assertIn("User-Agent", headers)
-        self.assertIn("Accept", headers)
-        self.assertIn("Accept-Language", headers)
-    
-    def test_rate_limiter(self):
-        """Test rate limiting"""
-        start = time.time()
-        for _ in range(3):
-            self.rate_limiter.wait()
-        elapsed = time.time() - start
-        # Should wait at least some time
-        self.assertGreaterEqual(elapsed, 0)
-    
-    def test_behavior_simulator(self):
-        """Test behavior simulation"""
-        delay = self.behavior_simulator.random_delay(1.0, 0.5)
-        self.assertGreaterEqual(delay, 0.5)
-        self.assertLessEqual(delay, 1.5)
+        from lead_finder.politeness import ua_manager, proxy_manager, header_manager, rate_limiter
+        self.ua, self.proxy, self.headers, self.rl = ua_manager, proxy_manager, header_manager, rate_limiter
+
+    def test_user_agent_is_constant_and_identifies_bot(self):
+        self.assertEqual(self.ua.get_agent(), self.ua.get_random_agent())
+        self.assertEqual(self.ua.get_agent_for_browser("chrome"), self.ua.get_agent_for_browser("firefox"))
+        self.assertRegex(self.ua.get_agent(), r"Bot|Finder")
+
+    def test_proxies_disabled(self):
+        self.assertFalse(self.proxy.enabled)
+        self.assertIsNone(self.proxy.get_proxy_url())
+        with self.assertRaises(RuntimeError):
+            self.proxy.add_proxy("1.2.3.4", 8080)
+
+    def test_headers_are_plain(self):
+        h = self.headers.get_headers_for_url("https://example.com")
+        self.assertEqual(h["User-Agent"], self.ua.get_agent())
+        self.assertNotIn("Referer", h)
+
+    def test_captcha_is_never_solved(self):
+        from lead_finder.captcha import solver_manager, get_solvers
+        ok, info = solver_manager.solve('<div class="g-recaptcha" data-sitekey="x"></div>', "https://example.com")
+        self.assertFalse(ok)
+        self.assertTrue(info["skipped"])
+        self.assertEqual(get_solvers(), [])
 
 
 class TestSourcesStealth(unittest.TestCase):
@@ -196,7 +171,7 @@ class TestSourcesStealth(unittest.TestCase):
         """Test source initialization with stealth"""
         self.assertEqual(self.source.source_type, "google_search")
         self.assertIsNotNone(self.source.user_agent)
-        self.assertTrue(self.source.use_stealth)
+        self.assertTrue(self.source.use_politeness)
     
     def test_source_get_headers(self):
         """Test headers generation in source"""
@@ -223,17 +198,9 @@ class TestModuleImports(unittest.TestCase):
         self.assertIsNotNone(JavaScriptRenderer)
     
     def test_import_captcha(self):
-        """Test captcha module import"""
-        from lead_finder.captcha import (
-            CaptchaConfig, EnhancedCaptchaDetector, CaptchaSolver,
-            TwoCaptchaSolver, AntiCaptchaSolver, CapsolverSolver,
-            LocalOCRSolver, LocalMathSolver, ManualSolver, RateLimitBypassSolver,
-            CaptchaSolverManager, CaptchaMiddleware, detector, solver_manager,
-            detect_captcha, solve_captcha, solve_with_solver, get_solvers,
-            get_captcha_stats
-        )
-        self.assertIsNotNone(CaptchaSolverManager)
-    
+        from lead_finder.captcha import CaptchaSolverManager, detector, solver_manager, detect_captcha, get_captcha_stats
+        self.assertEqual(get_captcha_stats()["policy"], "detect-and-skip (no solving)")
+
     def test_import_search(self):
         """Test search module import"""
         from lead_finder.search import (
@@ -245,17 +212,9 @@ class TestModuleImports(unittest.TestCase):
         )
         self.assertIsNotNone(SearchEngineClient)
     
-    def test_import_stealth(self):
-        """Test stealth module import"""
-        from lead_finder.stealth import (
-            USER_AGENTS, UserAgentManager, Proxy, ProxyConfig,
-            RateLimiter, HeaderManager, BehaviorSimulator, CaptchaDetector,
-            ua_manager, proxy_manager, rate_limiter, header_manager,
-            behavior_simulator, captcha_detector, get_random_user_agent,
-            get_random_proxy, get_random_delay, human_like_delay,
-            get_stealth_headers, load_proxies_from_file, enable_proxies
-        )
-        self.assertIsNotNone(UserAgentManager)
+    def test_import_politeness(self):
+        from lead_finder.politeness import ua_manager, proxy_manager, rate_limiter, header_manager, captcha_detector
+        self.assertIsNotNone(ua_manager)
 
 
 class TestAppCommands(unittest.TestCase):
@@ -274,7 +233,7 @@ class TestAppCommands(unittest.TestCase):
             from lead_finder.search import search, paginated_search
             from lead_finder.javascript import render_page
             from lead_finder.captcha import detector, solver_manager
-            from lead_finder.stealth import ua_manager, proxy_manager
+            from lead_finder.politeness import ua_manager, proxy_manager
             self.assertTrue(True)
         except ImportError as e:
             self.fail(f"Import error: {e}")
@@ -293,7 +252,7 @@ def run_tests():
     
     # Add test classes
     suite.addTests(loader.loadTestsFromTestCase(TestModuleImports))
-    suite.addTests(loader.loadTestsFromTestCase(TestStealthIntegration))
+    suite.addTests(loader.loadTestsFromTestCase(TestPoliteCrawling))
     suite.addTests(loader.loadTestsFromTestCase(TestSourcesStealth))
     suite.addTests(loader.loadTestsFromTestCase(TestSearchQueryBuilder))
     suite.addTests(loader.loadTestsFromTestCase(TestCaptchaDetector))

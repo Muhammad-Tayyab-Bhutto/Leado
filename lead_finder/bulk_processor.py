@@ -35,7 +35,7 @@ from .sources import ALL_SOURCES
 from .enrichment import ALL_ENRICHERS
 from .deep_enrichment import WebsiteDataProvider, CompanyDataProvider, SocialDataProvider
 from .email_finder import comprehensive_email_finder, email_verifier, bulk_email_finder
-from .linkedin_scraper import linkedin_company_scraper, linkedin_employee_discoverer
+from .intent_signals import linkedin_company_scraper, linkedin_employee_discoverer
 from .ai_intent import content_analyzer, intent_engine
 from .advanced_scoring import scoring_engine, MultiDimensionalScorer
 from .database import conn as finder_conn, log_discovery, update_leads_imported, init_db

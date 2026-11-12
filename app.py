@@ -332,96 +332,12 @@ if __name__ == "__main__":
                     with open(args.output, 'w') as f:
                         f.write(html)
                     print(f"Saved to {args.output}")
-            elif subcmd == "captcha":
-                from lead_finder.captcha import detector, solver_manager, get_solvers, get_captcha_stats
-                import argparse
-                parser = argparse.ArgumentParser(description="CAPTCHA detection and solving")
-                parser.add_argument("url", type=str, nargs="?", help="URL to check for CAPTCHA")
-                parser.add_argument("--solve", action="store_true", help="Attempt to solve CAPTCHA")
-                parser.add_argument("--stats", action="store_true", help="Show solver statistics")
-                parser.add_argument("--list", action="store_true", help="List available solvers")
-                args = parser.parse_args(sys.argv[3:])
-                
-                if args.list:
-                    solvers = get_solvers()
-                    print("Available CAPTCHA solvers:")
-                    for solver in solvers:
-                        print(f"  - {solver}")
-                elif args.stats:
-                    stats = get_captcha_stats()
-                    print(json.dumps(stats, indent=2))
-                elif args.url:
-                    try:
-                        import urllib.request
-                        req = urllib.request.Request(args.url, headers={"User-Agent": UA})
-                        with urllib.request.urlopen(req, timeout=30) as response:
-                            html = response.read().decode('utf-8', 'replace')
-                            headers = dict(response.headers)
-                            status_code = response.getcode()
-                        
-                        detection = detector.detect(html, headers, args.url, status_code)
-                        print(f"CAPTCHA Detection Results:")
-                        print(f"  Detected: {detection['detected']}")
-                        print(f"  Type: {detection['type']}")
-                        print(f"  Confidence: {detection['confidence']:.2f}")
-                        print(f"  Types: {detection['types']}")
-                        print(f"  Indicators: {detection['indicators']}")
-                        
-                        if detection['detected'] and args.solve:
-                            success, result = solver_manager.solve(html, args.url, headers, status_code)
-                            print(f"\nSolve Result:")
-                            print(f"  Success: {success}")
-                            if success:
-                                print(f"  Solution: {result.get('solution', 'N/A')}")
-                            else:
-                                print(f"  Error: {result.get('error', 'Unknown')}")
-                    except Exception as e:
-                        print(f"Error: {e}")
-                else:
-                    print("Usage: python app.py scrape captcha [URL] --solve --stats --list")
-            elif subcmd == "stealth":
-                from lead_finder.stealth import (
-                    ua_manager, proxy_manager, rate_limiter, behavior_simulator,
-                    get_random_user_agent, get_random_proxy, get_stealth_headers
-                )
-                import argparse
-                parser = argparse.ArgumentParser(description="Stealth techniques test")
-                parser.add_argument("--ua", action="store_true", help="Test user agent rotation")
-                parser.add_argument("--proxy", action="store_true", help="Test proxy rotation")
-                parser.add_argument("--rate", action="store_true", help="Test rate limiting")
-                parser.add_argument("--headers", action="store_true", help="Show stealth headers")
-                parser.add_argument("--url", type=str, default=None, help="URL for headers test")
-                args = parser.parse_args(sys.argv[3:])
-                
-                if args.ua:
-                    print("User Agent Rotation Test:")
-                    for i in range(5):
-                        ua = ua_manager.get_agent()
-                        print(f"  {i+1}. {ua[:80]}...")
-                
-                if args.proxy:
-                    print(f"\nProxy Manager:")
-                    print(f"  Enabled: {proxy_manager.enabled}")
-                    print(f"  Proxies loaded: {len(proxy_manager.proxies)}")
-                    if proxy_manager.proxies:
-                        print(f"  Strategy: {proxy_manager.rotation_strategy}")
-                
-                if args.rate:
-                    print(f"\nRate Limiter:")
-                    stats = rate_limiter.get_stats()
-                    for k, v in stats.items():
-                        print(f"  {k}: {v}")
-                
-                if args.headers:
-                    ua = get_random_user_agent()
-                    headers = get_stealth_headers(args.url, ua)
-                    print(f"\nStealth Headers:")
-                    for k, v in headers.items():
-                        print(f"  {k}: {v}")
+            elif subcmd in ("captcha", "stealth"):
+                print("Removed: Dealwright crawls politely (honest user agent, rate limits, robots.txt) and skips sites that present CAPTCHAs.")
             else:
-                print("Usage: python app.py scrape [search|javascript|captcha|stealth]")
+                print("Usage: python app.py scrape [search|javascript]")
         else:
-            print("Usage: python app.py scrape [search|javascript|captcha|stealth]")
+            print("Usage: python app.py scrape [search|javascript]")
     else:
         import crm
         args = ([cmd] if cmd.isdigit() else []) + sys.argv[2:]

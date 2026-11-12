@@ -31,7 +31,7 @@ from .config import UA, domain_of, SERVICE_KEYWORDS, INDUSTRY_KEYWORDS
 from .http_utils import http_get, clean_text, extract_emails, extract_links, extract_social_links, detect_technologies
 from .database import conn as finder_conn, log_discovery, cache_enrichment, get_cached_enrichment
 from .email_finder import comprehensive_email_finder, email_verifier
-from .linkedin_scraper import linkedin_company_scraper, linkedin_employee_discoverer, intent_signal_detector
+from .intent_signals import linkedin_company_scraper, linkedin_employee_discoverer, intent_signal_detector
 from .ai_intent import content_analyzer, intent_engine
 
 
