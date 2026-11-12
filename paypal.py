@@ -287,6 +287,8 @@ def settle(ppid: str, new_status: str, capture_id: str = None, payer_email: str 
                   (today, today, pay["lead_id"]))
         if pay["proposal_id"]:
             c.execute("update proposals set status='paid', updated_at=? where id=?", (now(), pay["proposal_id"]))
+        import ops
+        ops.project_from_payment(c, pay)  # a paid deal goes straight into the delivery queue
         what = {"order": "payment captured", "subscription": "subscription activated", "invoice": "invoice paid"}[pay["kind"]]
         _event(c, pay["lead_id"], "paypal_paid",
                f"PayPal {what}: {pay['tier_name']} ${pay['amount']:,.2f}{'/mo' if pay['interval'] == 'month' else ''} ({source}). Deal moved to WON.")

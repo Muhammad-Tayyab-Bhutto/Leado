@@ -10,7 +10,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import app, agent, sandbox, proposal_engine, copilot, workforce, growth, paypal, paypal_web
+import app, agent, sandbox, proposal_engine, copilot, workforce, growth, paypal, paypal_web, ops
 from app import conn, STATUSES, SERVICES, now
 
 TOKEN = os.environ.get("SOFTORASYSTEMS_TOKEN", "")
@@ -317,6 +317,34 @@ def base_url(h=None):
     proto = (h.headers.get("X-Forwarded-Proto") or "http").split(",")[0].strip()
     host = h.headers.get("X-Forwarded-Host") or h.headers.get("Host") or f"localhost:{PORT}"
     return f"{proto}://{host}"
+
+# ============================================================================
+# TEAM & PROJECTS (admin)
+# ============================================================================
+
+@route("GET", "/api/team")
+def team_list(q, b): return {"items": ops.list_members(include_inactive=g(q, "all") == "1"), "summary": ops.summary()}
+
+@route("POST", "/api/team")
+def team_add(q, b): return ops.add_member(b)
+
+@route("PATCH", "/api/team/(\\d+)")
+def team_patch(q, b, i): return ops.update_member(i, b)
+
+@route("GET", "/api/projects")
+def projects_list(q, b): return {"items": ops.list_projects(g(q, "status") or None), "summary": ops.summary()}
+
+@route("POST", "/api/projects")
+def projects_add(q, b): return ops.create_project(b)
+
+@route("POST", "/api/projects/auto-assign")
+def projects_auto(q, b): return ops.auto_assign()
+
+@route("GET", "/api/projects/(\\d+)")
+def project_get(q, b, i): return ops.get_project(i)
+
+@route("PATCH", "/api/projects/(\\d+)")
+def project_patch(q, b, i): return ops.update_project(i, b)
 
 @route("GET", "/api/paypal/status")
 def paypal_status(q, b): return paypal.status()

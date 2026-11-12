@@ -10,6 +10,7 @@ from datetime import date, timedelta
 
 import app
 import agent
+import ops
 from app import conn, now
 
 TEAM = [
@@ -27,7 +28,7 @@ CONNECTORS = [
     {"id": "proposals", "name": "Proposal Intelligence", "kind": "native", "blurb": "Scope of work and pricing tiers."},
     {"id": "sandbox", "name": "Blast Radius Sandbox", "kind": "native", "blurb": "Isolated site audits. Host secrets stay out."},
     {"id": "discovery", "name": "Lead Discovery", "kind": "native", "blurb": "Multi-channel prospect search."},
-    {"id": "inference", "name": "Vultr Inference", "kind": "model", "blurb": "Serverless model for open questions."},
+    {"id": "inference", "name": "LLM Inference", "kind": "model", "blurb": "Model for open questions (OpenRouter or Vultr)."},
     {"id": "voice", "name": "Shimmer Voice", "kind": "browser", "blurb": "Microphone and spoken replies in the browser."},
     {"id": "webhook", "name": "Outbound Webhook", "kind": "external", "blurb": "POST a team digest to your own HTTPS endpoint."},
 ]
@@ -50,17 +51,23 @@ def ensure():
         CREATE TABLE IF NOT EXISTS voice_log(
           id INTEGER PRIMARY KEY, at TEXT, agent TEXT, utterance TEXT, reply TEXT);
         """)
-        if c.execute("select count(*) from team_members").fetchone()[0] == 0:
-            c.executemany(
-                "insert into team_members(name,role,skills,email,capacity,status) values(?,?,?,?,?,?)",
-                TEAM,
-            )
         for spec in CONNECTORS:
             enabled = 0 if spec["id"] == "webhook" else 1
             c.execute(
                 "insert or ignore into connectors(id,enabled,config) values(?,?,?)",
                 (spec["id"], enabled, ""),
             )
+    ops.ensure()
+    with conn() as c:
+        _sync_assignments(c)
+
+
+def seed_demo_team():
+    """Fictional roster for demos only; real companies add their own people and agents."""
+    ensure()
+    with conn() as c:
+        if c.execute("select count(*) from team_members").fetchone()[0] == 0:
+            c.executemany("insert into team_members(name,role,skills,email,capacity,status) values(?,?,?,?,?,?)", TEAM)
         _sync_assignments(c)
 
 
@@ -94,7 +101,7 @@ def _due_for(status, score, discovered):
 
 
 def _sync_assignments(c):
-    members = [r[0] for r in c.execute("select id from team_members order by id")]
+    members = [r[0] for r in c.execute("select id from team_members where coalesce(active,1)=1 order by id")]
     if not members:
         return
     rows = c.execute(
@@ -129,7 +136,7 @@ def _members(c):
           (select count(*) from assignments a
              join leads l on l.id=a.lead_id
             where a.member_id=m.id and l.status not in """ + CLOSED + """) as load
-        from team_members m order by m.id
+        from team_members m where coalesce(m.active,1)=1 order by m.id
     """)]
 
 
@@ -400,48 +407,62 @@ def agent_activity(c, _q):
     }
 
 
+def _avail_label(m):
+    return {"free": "free", "busy": "busy", "at_capacity": "at capacity", "away": "away"}.get(m["availability"], m["availability"])
+
+
+def _working_on(m):
+    return ", ".join(p["name"] for p in m["working_on"]) or "nothing active"
+
+
 def agent_available(c, _q):
-    people = [p for p in _members(c) if p["status"] == "available" and p["load"] < p["capacity"]]
+    people = [m for m in ops.list_members() if m["availability"] in ("free", "busy")]
     if not people:
-        return {
-            "speak": "Nobody is under capacity right now.",
-            "reply": "**Who is available:** every member is busy or at capacity.",
-            "actions": [],
-        }
-    lines = [f"• **{p['name']}** · {p['role']} · {p['load']}/{p['capacity']}" for p in people]
-    return {
-        "speak": f"{people[0]['name']} is available, along with {max(0, len(people)-1)} others.",
-        "reply": "**Who is available**\n\n" + "\n".join(lines),
-        "actions": [],
-    }
+        return {"speak": "Nobody has free capacity right now.",
+                "reply": "**Who is available:** everyone is at capacity or away.", "actions": []}
+    people.sort(key=lambda m: (m["availability"] != "free", m["active_projects"]))
+    lines = [f"• **{m['name']}**{' 🤖' if m['kind'] == 'ai_agent' else ''} · {m['role']} · {_avail_label(m)} · "
+             f"{m['active_projects']}/{m['capacity_projects']} projects" for m in people]
+    free = sum(1 for m in people if m["availability"] == "free")
+    return {"speak": f"{free} members are completely free and {len(people) - free} more have spare capacity.",
+            "reply": "**Who is available**\n\n" + "\n".join(lines), "actions": []}
 
 
 def agent_busy(c, _q):
-    people = [p for p in _members(c) if p["status"] == "busy" or p["load"] >= p["capacity"]]
+    people = [m for m in ops.list_members() if m["availability"] in ("busy", "at_capacity")]
     if not people:
-        return {
-            "speak": "No one is marked busy.",
-            "reply": "**Who is busy:** the roster is clear.",
-            "actions": [],
-        }
-    lines = [f"• **{p['name']}** · {p['role']} · load {p['load']}/{p['capacity']} · {p['status']}" for p in people]
-    return {
-        "speak": f"{people[0]['name']} is busy. {len(people)} people are at or over their line.",
-        "reply": "**Who is busy**\n\n" + "\n".join(lines),
-        "actions": [],
-    }
+        return {"speak": "No one is working on a project right now.",
+                "reply": "**Who is busy:** nobody has an active project.", "actions": []}
+    lines = [f"• **{m['name']}** · {_avail_label(m)} · working on {_working_on(m)}" for m in people]
+    return {"speak": f"{len(people)} members are working on projects.",
+            "reply": "**Who is busy**\n\n" + "\n".join(lines), "actions": []}
 
 
 def agent_workload(c, _q):
-    people = _members(c)
-    lines = []
-    for p in people:
-        cap = max(1, p["capacity"])
-        pct = min(100, int(round(100 * p["load"] / cap)))
-        lines.append(f"• **{p['name']}** — {p['load']}/{p['capacity']} ({pct}%)")
-    busiest = max(people, key=lambda p: p["load"]) if people else None
-    speak = "Workload is balanced." if not busiest else f"{busiest['name']} has the heaviest load at {busiest['load']} open items."
-    return {"speak": speak, "reply": "**Current workload**\n\n" + "\n".join(lines), "actions": []}
+    people = ops.list_members()
+    lines = [f"• **{m['name']}** — {m['active_projects']}/{m['capacity_projects']} active, {m['queued_projects']} queued · "
+             f"{_avail_label(m)}" for m in people]
+    busiest = max(people, key=lambda m: m["active_projects"]) if people else None
+    speak = ("No members yet." if not busiest else "Workload is balanced." if busiest["active_projects"] == 0
+             else f"{busiest['name']} has the heaviest load with {busiest['active_projects']} active projects.")
+    return {"speak": speak, "reply": "**Current workload**\n\n" + ("\n".join(lines) or "No members yet."), "actions": []}
+
+
+def agent_project_queue(c, _q):
+    s = ops.summary()
+    projects = ops.list_projects()
+    active = [p for p in projects if p["status"] in ops.ACTIVE]
+    queued = [p for p in projects if p["status"] == "queued"]
+    lines = [f"• **{p['name']}** — {p['status'].replace('_', ' ')} · {p['assignee_name'] or 'unassigned'}"
+             f"{' · ⚠️ overdue' if p['overdue'] else ''}" for p in active[:8]]
+    if queued:
+        lines.append(f"\n**Queue ({len(queued)})**")
+        lines += [f"• {p['name']} · {p['priority']} · {p['assignee_name'] or 'unassigned'}" for p in queued[:6]]
+    head = (f"**Projects** · {s['in_progress']} in progress · {s['review']} in review · {s['queued']} queued "
+            f"({s['unassigned_queued']} unassigned) · {s['overdue']} overdue\n\n")
+    return {"speak": f"{s['in_progress']} projects are in progress and {s['queued']} are waiting in the queue.",
+            "reply": head + ("\n".join(lines) or "No projects yet."),
+            "actions": [{"label": "Open Team & Projects", "type": "view", "target": "ops"}]}
 
 
 def agent_progress(c, _q):
@@ -939,6 +960,8 @@ AGENTS = [
      "keys": ("available", "free", "who can", "capacity"), "run": agent_available},
     {"id": "busy", "label": "Who Is Busy", "persona": "Load", "connector": "crm",
      "keys": ("busy", "slammed", "overloaded"), "run": agent_busy},
+    {"id": "projects", "label": "Project Queue", "persona": "Foreman", "connector": "crm",
+     "keys": ("project queue", "projects in queue", "working on", "delivery", "which project", "in the queue"), "run": agent_project_queue},
     {"id": "workload", "label": "Current Workload", "persona": "Gauge", "connector": "crm",
      "keys": ("workload", "load", "capacity"), "run": agent_workload},
     {"id": "progress", "label": "Team Progress", "persona": "Momentum", "connector": "crm",

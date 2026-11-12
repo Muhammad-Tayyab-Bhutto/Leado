@@ -150,9 +150,20 @@ DEMO_LEADS = [
     }
 ]
 
+DEMO_AI_AGENTS = [
+    {"name": "Forge", "kind": "ai_agent", "role": "Coding agent", "skills": "backend,python,automation,ai", "capacity": 4},
+    {"name": "Lens", "kind": "ai_agent", "role": "QA & audit agent", "skills": "qa,security,devops", "capacity": 4},
+]
+
+
 def seed():
     app.init()
     proposal_engine.init_proposals()
+    import workforce, ops
+    workforce.seed_demo_team()
+    for agent_def in DEMO_AI_AGENTS:
+        try: ops.add_member(agent_def)
+        except ValueError: pass  # already seeded
     
     for l in DEMO_LEADS:
         try:
