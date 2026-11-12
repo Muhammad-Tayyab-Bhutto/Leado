@@ -38,6 +38,17 @@ never moves money on its own. Invoices, refunds and cancellations come back as
 confirmation buttons, and the API rejects them without `confirm: true`.
 Reminder emails go through the existing human-approval and suppression gates.
 
+## Team & Projects: run the delivery side of a software company
+
+Sales and money are only half of a services company. The **Team & Projects** view is the admin console for delivery:
+
+- **One roster for people and AI agents.** Add employees and AI agents with a role, skills and project capacity. Deactivating someone keeps their history and returns their open work to the queue.
+- **Who is working on what, and who is free.** Availability is computed from real assignments (free, busy, at capacity), or set to away by hand. Each member shows the projects in progress, any queued work, and load against capacity.
+- **Project queue.** Queued → In progress → Review → Done, with priority, due dates, overdue flags, and assignment from a dropdown.
+- **Paid deals become projects.** When a PayPal payment settles, a high-priority delivery project is queued automatically, with skills inferred from the service sold.
+- **Explainable auto-assign.** Each unassigned project goes to the available member, human or AI agent, with the best skill match and the most headroom. Every decision comes with its reason, and projects nobody is qualified for are left unassigned rather than forced on someone.
+- **Ask in plain language.** Voice agents such as "who is free", "who is busy", "workload" and "what is in the project queue" answer from the same data.
+
 ## Quick start for judges (about 10 minutes)
 
 ### 1. PayPal sandbox credentials
@@ -102,7 +113,8 @@ Deploy with **Render**: `render.yaml` is a ready Blueprint. Set
 | `crm.py` | HTTP server and REST API. Public routes are only `/`, `/pay/<token>…` and `/api/paypal/webhook` |
 | `proposal_engine.py` | SOW plus pricing tiers (now with numeric `amount` / `interval` for PayPal) |
 | `agent.py` | LLM client (OpenRouter / Vultr) with a circuit breaker and daily cap |
-| `ui.html` | Single-page CRM: pipeline, proposals, **PayPal Payments**, Wren |
+| `ops.py` | Team roster (people and AI agents), project queue, availability, auto-assign, PayPal → project hook |
+| `ui.html` | Single-page CRM: pipeline, proposals, **PayPal Payments**, **Team & Projects**, Wren |
 | `app.py`, `lead_finder/`, `sandbox.py`, `growth.py`, `workforce.py` | Discovery, scoring, sandboxed audits, outreach |
 
 ### PayPal API surface
@@ -118,6 +130,9 @@ Deploy with **Render**: `render.yaml` is a ready Blueprint. Set
 | `POST /api/payments/{id}/refund` | bearer + `confirm` | Refund or cancel |
 | `POST /api/payments/{id}/sync` | bearer | Pull the latest state from PayPal |
 | `POST /api/payments/{id}/remind` | bearer | AI collections draft (queued for approval) |
+| `GET/POST /api/team`, `PATCH /api/team/{id}` | bearer | Roster of people and AI agents; availability, away, deactivate |
+| `GET/POST /api/projects`, `GET/PATCH /api/projects/{id}` | bearer | Delivery projects: status, assignee, priority, due |
+| `POST /api/projects/auto-assign` | bearer | Skill- and capacity-based assignment, with a reason for each decision |
 
 ## Responsible by design
 
