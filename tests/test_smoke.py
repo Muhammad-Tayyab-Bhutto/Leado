@@ -1,4 +1,4 @@
-"""Smoke tests for Leado 2.0.
+"""Smoke tests for Dealwright.
 
 These exercise the HTTP layer, token auth, the public UI shell, and the
 Blast Radius Zero containment proof. No external network or LLM keys needed.
@@ -26,7 +26,7 @@ import crm  # noqa: E402
 import sandbox  # noqa: E402
 
 
-class LeadoSmokeTests(unittest.TestCase):
+class DealwrightSmokeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
@@ -56,7 +56,7 @@ class LeadoSmokeTests(unittest.TestCase):
     def test_ui_is_public_and_contains_no_token(self):
         status, body = self.request("/")
         self.assertEqual(status, 200)
-        self.assertIn(b"Leado", body)
+        self.assertIn(b"Dealwright", body)
         self.assertNotIn(TEST_TOKEN.encode(), body)
         # The token input must never be prefilled with a credential.
         self.assertNotRegex(body.decode(), r'id="tok"[^>]*value="[^"]+"')

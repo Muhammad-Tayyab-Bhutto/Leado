@@ -1,4 +1,4 @@
-# Leado 2.0 × Vultr - Autonomous Sales Ops & Sandboxed Agent
+# Dealwright - AI quote-to-cash with PayPal
 FROM python:3.11-slim
 
 WORKDIR /app

@@ -578,7 +578,7 @@ def _post_webhook(url, payload):
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json", "User-Agent": "Leado-Shimmer/1.0"},
+            headers={"Content-Type": "application/json", "User-Agent": "Dealwright-Shimmer/1.0"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=4) as res:
@@ -957,37 +957,37 @@ AGENTS = [
      "keys": ("sandbox", "contain", "blast", "security"), "run": agent_sandbox},
     {"id": "discover", "label": "Lead Discovery", "persona": "Scout", "connector": "discovery",
      "keys": ("discover", "find leads", "hunt", "scrape"), "run": agent_discover},
-    {"id": "how", "label": "How It Works", "persona": "Vio", "connector": "voice", "lane": "vio",
+    {"id": "how", "label": "How It Works", "persona": "Wren", "connector": "voice", "lane": "vio",
      "keys": ("how it works", "how do you work", "what can you do"), "run": agent_how},
-    {"id": "briefing", "label": "Daily Briefing", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "briefing", "label": "Daily Briefing", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("daily briefing", "briefing", "brief me"), "run": agent_briefing},
-    {"id": "scrum", "label": "Scrum Meeting", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "scrum", "label": "Scrum Meeting", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("scrum meeting", "scrum", "standup", "stand-up"), "run": agent_scrum},
-    {"id": "leads", "label": "Leads", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "leads", "label": "Leads", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("show leads", "lead list", "our leads"), "run": agent_leads},
-    {"id": "sales_pipeline", "label": "Sales Pipeline", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "sales_pipeline", "label": "Sales Pipeline", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("sales pipeline", "pipeline"), "run": agent_sales_pipeline},
-    {"id": "priority", "label": "Priority Leads", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "priority", "label": "Priority Leads", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("priority leads", "priority", "high priority"), "run": agent_priority},
-    {"id": "proposals_intent", "label": "Proposals", "persona": "Vio", "connector": "proposals", "lane": "vio",
+    {"id": "proposals_intent", "label": "Proposals", "persona": "Wren", "connector": "proposals", "lane": "vio",
      "keys": ("proposals", "proposal", "sow"), "run": agent_proposals},
-    {"id": "messages", "label": "Client Messages", "persona": "Vio", "connector": "email", "lane": "vio",
+    {"id": "messages", "label": "Client Messages", "persona": "Wren", "connector": "email", "lane": "vio",
      "keys": ("client messages", "messages"), "run": agent_messages},
-    {"id": "unread", "label": "Unread Emails", "persona": "Vio", "connector": "email", "lane": "vio",
+    {"id": "unread", "label": "Unread Emails", "persona": "Wren", "connector": "email", "lane": "vio",
      "keys": ("unread", "unread emails"), "run": agent_unread},
-    {"id": "appointments", "label": "Appointments", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "appointments", "label": "Appointments", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("appointment", "appointments", "meeting"), "run": agent_appointments},
-    {"id": "clients", "label": "Clients", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "clients", "label": "Clients", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("clients", "customers", "accounts"), "run": agent_clients},
-    {"id": "wrong", "label": "What Went Wrong", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "wrong", "label": "What Went Wrong", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("what went wrong", "went wrong", "what broke"), "run": agent_wrong},
-    {"id": "fix", "label": "Fix Recommendation", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "fix", "label": "Fix Recommendation", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("fix recommendation", "recommend a fix", "what should we fix"), "run": agent_fix},
-    {"id": "project_status", "label": "Project Status", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "project_status", "label": "Project Status", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("project status", "status update"), "run": agent_project_status},
-    {"id": "my_tasks", "label": "My Tasks", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "my_tasks", "label": "My Tasks", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("my tasks", "my task"), "run": agent_my_tasks},
-    {"id": "sprint", "label": "Sprint Summary", "persona": "Vio", "connector": "crm", "lane": "vio",
+    {"id": "sprint", "label": "Sprint Summary", "persona": "Wren", "connector": "crm", "lane": "vio",
      "keys": ("sprint", "sprint summary"), "run": agent_sprint},
 ]
 
@@ -1126,7 +1126,7 @@ def _inference_on():
 
 def _open_question(utterance):
     system = (
-        "You are Shimmer, the voice of a sales-operations agent team inside Leado. "
+        "You are Shimmer, the voice of a sales-operations agent team inside Dealwright. "
         "Answer in under 90 words. Be concrete. Do not invent pipeline numbers. "
         "If you need data you do not have, say which agent to ask: timeline, delayed, workload, or daily summary."
     )

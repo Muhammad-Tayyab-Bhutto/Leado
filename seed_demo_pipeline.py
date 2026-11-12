@@ -1,4 +1,4 @@
-"""Seed rich, realistic demo pipeline data for Leado 2.0 × Vultr.
+"""Seed rich, realistic demo pipeline data for Dealwright.
 Populates leads across stages (SaaS, FinTech, HealthTech, DevTools, E-commerce),
 with verified evidence, scores, proposals, email drafts, and activity events.
 """
@@ -24,7 +24,6 @@ DEMO_LEADS = [
         "contact_email": "sarah.chen@datastream-analytics.io",
         "email_status": "verified",
         "email_source": "hunter.io",
-        "linkedin_url": "https://linkedin.com/in/sarahchen-datastream",
         "f_relevance": 95,
         "f_problem": 90,
         "f_pay": 85,
@@ -52,7 +51,6 @@ DEMO_LEADS = [
         "contact_email": "marcus.v@finflow-payments.com",
         "email_status": "verified",
         "email_source": "clearbit",
-        "linkedin_url": "https://linkedin.com/in/marcusvance-finflow",
         "f_relevance": 90,
         "f_problem": 85,
         "f_pay": 95,
@@ -80,7 +78,6 @@ DEMO_LEADS = [
         "contact_email": "lukas@cloudpulse-infra.net",
         "email_status": "verified",
         "email_source": "github",
-        "linkedin_url": "https://linkedin.com/in/lukas-weber-infra",
         "f_relevance": 100,
         "f_problem": 95,
         "f_pay": 90,
@@ -108,7 +105,6 @@ DEMO_LEADS = [
         "contact_email": "erostova@healthnexus-ehr.com",
         "email_status": "verified",
         "email_source": "directory",
-        "linkedin_url": "https://linkedin.com/in/elena-rostova-md",
         "f_relevance": 85,
         "f_problem": 80,
         "f_pay": 90,
@@ -136,7 +132,6 @@ DEMO_LEADS = [
         "contact_email": "d.tremblay@apex-logistics.ai",
         "email_status": "verified",
         "email_source": "web_scrape",
-        "linkedin_url": "https://linkedin.com/in/davidtremblay-logistics",
         "f_relevance": 90,
         "f_problem": 90,
         "f_pay": 85,
@@ -173,7 +168,11 @@ def seed():
     for lead_id, domain, company, score in lead_list:
         # Generate proposal
         try:
-            proposal_engine.generate_proposal(lead_id)
+            p = proposal_engine.get_proposal(lead_id)
+            stale = p and p.get("status") != "paid" and ("Vultr" in json.dumps(p.get("pricing_tiers")) or
+                                                          not all("amount" in t for t in p.get("pricing_tiers") or []))
+            if not p or stale:  # idempotent: keeps pay links/paid proposals, refreshes outdated ones
+                proposal_engine.generate_proposal(lead_id)
         except Exception as ex:
             print(f"Proposal gen error for {company}: {ex}")
             
@@ -188,7 +187,7 @@ def seed():
                     "A (Direct Value)",
                     0,
                     f"Quick diagnostic note on {company}'s digital workflow",
-                    f"Hi {company} team,\n\nWhile reviewing {domain}, our automated crawler identified an operational bottleneck: {DEMO_LEADS[0]['problem']}.\n\nSoftora & Leado deploy autonomous sandboxed workflows on Vultr to eliminate this overhead.\n\nWorth a brief 10-minute briefing?\n\nBest,\nMuhammad Tayyab Bhutto\nFounder, Softora Systems",
+                    f"Hi {company} team,\n\nWhile reviewing {domain}, our automated crawler identified an operational bottleneck: {DEMO_LEADS[0]['problem']}.\n\nDealwright can scope a fix, quote it, and take payment through PayPal in a single flow.\n\nWorth a brief 10-minute briefing?\n\nBest,\nMuhammad Tayyab Bhutto\nFounder, Softora Systems",
                     "draft",
                     "2026-11-10"
                 ))
