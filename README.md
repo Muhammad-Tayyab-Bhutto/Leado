@@ -7,6 +7,8 @@
 [![PayPal Sandbox](https://img.shields.io/badge/PayPal-Sandbox-003087?logo=paypal&logoColor=white)](https://developer.paypal.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+![Dealwright: your whole software company, run by people and AI agents, on PayPal](demo/gallery/01-cover.png)
+
 Agencies and B2B service teams lose deals in the gap between *"proposal sent"*
 and *"got paid"*. Proposals sit in PDFs, invoices go out days later, and nobody
 chases the unpaid ones. Dealwright closes that gap:
