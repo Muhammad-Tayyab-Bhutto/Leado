@@ -24,7 +24,6 @@ srv.pid
 iso.err
 iso.dom
 crm.log
-graphify-out/
 
 # OS / editor
 .DS_Store
@@ -37,3 +36,6 @@ demo/*.srt
 demo/server.log
 demo/raw-take.*
 demo/take2-backup.*
+demo/SUBMISSION.md
+demo/STORY.md
+demo/*.log

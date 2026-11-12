@@ -19,7 +19,6 @@ venv/
 *.sqlite3
 
 # Generated artifacts / docs not needed at runtime
-graphify-out/
 docs/
 srv.pid
 iso.dom

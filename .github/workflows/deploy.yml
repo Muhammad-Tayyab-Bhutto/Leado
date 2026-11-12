@@ -53,7 +53,6 @@ jobs:
             --exclude '*.db' \
             --exclude '*.db-*' \
             --exclude '__pycache__' \
-            --exclude 'graphify-out' \
             -e "ssh -p $VULTR_PORT" \
             ./ "$VULTR_USER@$VULTR_HOST:/opt/leado/"
 
