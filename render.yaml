@@ -1,0 +1,29 @@
+# One-click hosted demo on Render (Blueprint). Secrets are entered in the Render dashboard.
+services:
+  - type: web
+    name: Dealwright
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    dockerCommand: sh -c "python seed_demo_pipeline.py && python app.py serve 8000"
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: SANDBOX_DISABLE_DOCKER
+        value: "1"
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: SOFTORASYSTEMS_TOKEN
+        generateValue: true
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        sync: false

@@ -34,8 +34,11 @@ jobs:
       - name: Byte-compile all Python sources
         run: python -m compileall -q .
 
-      - name: Run smoke tests
+      - name: Run smoke + PayPal quote-to-cash tests
         run: python -m unittest discover -s tests -v
+
+      - name: Run lead-finder tests (polite crawling, no CAPTCHA solving)
+        run: python -m unittest lead_finder.tests -v
 
   docker:
     name: Docker build + container smoke test
@@ -51,7 +54,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: leado:ci
+          tags: dealwright:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -59,10 +62,10 @@ jobs:
         run: |
           set -euo pipefail
           TOKEN="ci-test-token-0123456789abcdef"
-          docker run -d --name leado-ci -p 8080:8000 \
+          docker run -d --name dealwright-ci -p 8080:8000 \
             -e SOFTORASYSTEMS_TOKEN="$TOKEN" \
             -e SOFTORA_HOST=0.0.0.0 \
-            leado:ci
+            dealwright:ci
 
           for _ in $(seq 1 30); do
             if curl -fsS http://localhost:8080/ >/dev/null 2>&1; then break; fi
@@ -76,11 +79,13 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" = "200"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/stats)" = "401"
           test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/stats)" = "200"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/paypal/status)" = "200"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/pay/invalid-token-0000000000)" = "404"
 
       - name: Container logs
         if: always()
-        run: docker logs leado-ci || true
+        run: docker logs dealwright-ci || true
 
       - name: Clean up
         if: always()
-        run: docker rm -f leado-ci || true
+        run: docker rm -f dealwright-ci || true
